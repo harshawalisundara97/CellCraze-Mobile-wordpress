@@ -164,3 +164,86 @@ function cellcraze_register_attributes() {
 	update_option( 'cellcraze_attributes_done', 1 );
 }
 add_action( 'admin_init', 'cellcraze_register_attributes' );
+
+/* ============================================================================
+ * Product detail (PDP, design 1c) — built with WooCommerce hooks so the core
+ * variation / add-to-cart JS keeps working. Layout + look come from CSS.
+ * ========================================================================== */
+
+/** Brand kicker above the product title. */
+function cellcraze_pdp_brand_kicker() {
+	global $product;
+	$brand = cellcraze_brand( $product );
+	if ( $brand ) {
+		echo '<span class="cc-kicker cc-pdp-brand">' . esc_html( $brand ) . '</span>';
+	}
+}
+add_action( 'woocommerce_single_product_summary', 'cellcraze_pdp_brand_kicker', 4 );
+
+/** SKU + warranty line under the title. */
+function cellcraze_pdp_sku_line() {
+	global $product;
+	$sku = $product->get_sku();
+	echo '<p class="cc-pdp-sku">';
+	if ( $sku ) {
+		echo 'SKU ' . esc_html( $sku ) . ' &middot; ';
+	}
+	echo 'Official warranty</p>';
+}
+add_action( 'woocommerce_single_product_summary', 'cellcraze_pdp_sku_line', 6 );
+
+/** Stock line (Modernist square + label) before the add-to-cart form. */
+function cellcraze_pdp_stock_line() {
+	global $product;
+	echo '<div class="cc-pdp-stock">' . cellcraze_stock_indicator( $product ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput
+}
+add_action( 'woocommerce_single_product_summary', 'cellcraze_pdp_stock_line', 25 );
+
+/** Delivery / Payment / Warranty info rows after the add-to-cart area. */
+function cellcraze_pdp_info_rows() {
+	$rows = array(
+		'Delivery' => 'Delivered in 2&ndash;4 days, nationwide.',
+		'Payment'  => 'Card, cash on delivery, or bank transfer.',
+		'Warranty' => 'Official warranty on every device.',
+	);
+	echo '<div class="cc-pdp-info">';
+	foreach ( $rows as $label => $text ) {
+		echo '<div class="cc-pdp-info-row"><span class="cc-pdp-info-label">' . esc_html( $label ) . '</span><span>' . wp_kses_post( $text ) . '</span></div>';
+	}
+	echo '</div>';
+}
+add_action( 'woocommerce_single_product_summary', 'cellcraze_pdp_info_rows', 45 );
+
+/**
+ * Specifications section (key/value) from the product's attributes,
+ * rendered after the summary, before related products.
+ */
+function cellcraze_pdp_specifications() {
+	global $product;
+	$attributes = $product->get_attributes();
+	if ( empty( $attributes ) ) {
+		return;
+	}
+	$rows = array();
+	foreach ( $attributes as $attribute ) {
+		if ( $attribute->get_variation() ) {
+			continue; // Variation attributes (Storage/Colour) shown in the form, not specs.
+		}
+		$name   = wc_attribute_label( $attribute->get_name() );
+		$values = $attribute->is_taxonomy()
+			? wc_get_product_terms( $product->get_id(), $attribute->get_name(), array( 'fields' => 'names' ) )
+			: $attribute->get_options();
+		if ( $values ) {
+			$rows[ $name ] = implode( ', ', $values );
+		}
+	}
+	if ( empty( $rows ) ) {
+		return;
+	}
+	echo '<section class="cc-pdp-specs"><div class="cc-section-head"><h2>Specifications</h2></div><div class="cc-specs-list">';
+	foreach ( $rows as $k => $v ) {
+		echo '<div class="cc-spec-row"><span class="cc-spec-key cc-muted">' . esc_html( $k ) . '</span><span class="cc-spec-val">' . esc_html( $v ) . '</span></div>';
+	}
+	echo '</div></section>';
+}
+add_action( 'woocommerce_after_single_product_summary', 'cellcraze_pdp_specifications', 15 );
