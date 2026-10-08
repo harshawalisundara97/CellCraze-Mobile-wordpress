@@ -31,11 +31,11 @@ Keys: `[x]` done · `[~]` in progress · `[ ]` todo. Keep this updated as work p
 - [x] 3.1 Foundation: tokens, fonts, global CSS, header, footer.
 - [x] 3.2 Homepage (1a).
 - [x] 3.3 Product card.
-- [ ] 3.4 Product detail (1c).
-- [ ] 3.5 Product listing + filters (1b).
-- [ ] 3.6 Cart + Checkout (1d).
-- [ ] 3.7 Order tracking / My Account (1g).
-- [ ] 3.8 Mobile polish (1e/1f).
+- [x] 3.4 Product detail (1c).
+- [x] 3.5 Product listing + filters (1b).
+- [x] 3.6 Cart + Checkout (1d).
+- [x] 3.7 Order tracking / My Account (1g).
+- [x] 3.8 Mobile polish (1e/1f) incl. PDP sticky add-to-cart bar.
 
 ### Task 4 — Payments, shipping, tax
 - [ ] 4.1 Enable Cash on Delivery + Direct bank transfer.

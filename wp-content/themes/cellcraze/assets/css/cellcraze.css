@@ -6,6 +6,7 @@
 /* ---- Reset-ish base ---- */
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+body.cellcraze { overflow-x: hidden; }
 body.cellcraze { background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
 a { color: inherit; }
 img { max-width: 100%; display: block; }
@@ -310,6 +311,8 @@ ul.products.cc-grid { display: grid; gap: 2px; background: var(--color-divider);
   .single-product div.product > .summary { padding: 24px 16px; }
   .single-product .product_title { font-size: 30px; }
   .single-product .summary .price { font-size: 26px; }
+  /* Sticky add-to-cart bar (1f) */
+  .single-product form.cart { position: sticky; bottom: 0; z-index: 20; background: var(--color-bg); border-top: 2px solid var(--color-divider); padding: 12px 16px 20px; margin: 0 -16px -24px; }
   .cc-specs-list { padding: 0 16px; }
   .cc-spec-row { grid-template-columns: 96px 1fr; }
   .single-product .related ul.products, .single-product .upsells ul.products { grid-template-columns: repeat(2, 1fr); }
