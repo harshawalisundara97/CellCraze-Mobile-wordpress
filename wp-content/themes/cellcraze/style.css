@@ -1,0 +1,40 @@
+/*
+Theme Name: CellCraze
+Theme URI: https://cellcraze.lk
+Description: CellCraze child theme for Storefront — mobile accessories store (Sri Lanka). Brand colours, LKR-friendly layout.
+Author: CellCraze
+Template: storefront
+Version: 1.0.0
+Text Domain: cellcraze
+*/
+
+/* Brand palette */
+:root {
+  --cc-primary: #0a84ff;   /* CellCraze blue */
+  --cc-accent:  #ff9500;   /* accent orange  */
+  --cc-dark:    #1c1f26;
+}
+
+/* Header & buttons pick up the brand colour. */
+.site-header {
+  background-color: var(--cc-dark);
+}
+
+.button.alt,
+button.single_add_to_cart_button,
+.woocommerce #respond input#submit.alt,
+.woocommerce a.button.alt {
+  background-color: var(--cc-primary);
+}
+
+.button.alt:hover,
+button.single_add_to_cart_button:hover,
+.woocommerce a.button.alt:hover {
+  background-color: var(--cc-accent);
+}
+
+/* Sale badges use the accent colour. */
+.onsale {
+  background-color: var(--cc-accent);
+  border-color: var(--cc-accent);
+}

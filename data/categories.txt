@@ -1,0 +1,10 @@
+# CellCraze product categories (created by scripts/04-create-categories.sh)
+Phones
+Headphones
+Earphones
+Chargers
+Smartwatches
+Power Banks
+Cases
+Cables
+Accessories

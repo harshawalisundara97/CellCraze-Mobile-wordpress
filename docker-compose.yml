@@ -1,0 +1,71 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: cellcraze-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  wordpress:
+    image: wordpress:6.7-php8.3-apache
+    container_name: cellcraze-wp
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - wp-data:/var/www/html
+      # Mount our version-controlled child theme straight into WordPress.
+      - ./wp-content/themes/cellcraze:/var/www/html/wp-content/themes/cellcraze
+
+  # Runs wp-cli against the same files/volume as the wordpress service.
+  # Used to execute the setup scripts; it is not a long-running service.
+  wpcli:
+    image: wordpress:cli-php8.3
+    container_name: cellcraze-cli
+    depends_on:
+      db:
+        condition: service_healthy
+    user: "33:33"  # www-data, matches the wordpress image file ownership
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${DB_NAME}
+      WORDPRESS_DB_USER: ${DB_USER}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      # Passed through to the setup scripts.
+      SITE_URL: ${SITE_URL}
+      SITE_TITLE: ${SITE_TITLE}
+      WP_ADMIN_USER: ${WP_ADMIN_USER}
+      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      SHOP_FLAT_RATE: ${SHOP_FLAT_RATE}
+      FREE_SHIPPING_MIN: ${FREE_SHIPPING_MIN}
+    volumes:
+      - wp-data:/var/www/html
+      - ./wp-content/themes/cellcraze:/var/www/html/wp-content/themes/cellcraze
+      - ./scripts:/scripts
+      - ./data:/data
+    entrypoint: ["sh"]
+    # Keeps the container available for `docker compose run`.
+    command: ["-c", "tail -f /dev/null"]
+
+volumes:
+  db-data:
+  wp-data:

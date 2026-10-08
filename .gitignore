@@ -1,0 +1,21 @@
+# Local environment
+.env
+
+# Docker volume mountpoints (if ever bind-mounted locally)
+db-data/
+wp-data/
+
+# WordPress core + uploads are NOT version controlled.
+# We only track our own theme, scripts, and data.
+wp-content/uploads/
+wp-content/plugins/
+wp-content/upgrade/
+wp-content/cache/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
