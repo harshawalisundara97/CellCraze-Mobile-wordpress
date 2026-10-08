@@ -55,6 +55,8 @@ function cellcraze_setup() {
 	add_theme_support( 'title-tag' );
 	add_theme_support( 'post-thumbnails' );
 
+	add_image_size( 'cellcraze_card', 600, 600, true );
+
 	register_nav_menus(
 		array(
 			'cc_categories' => __( 'Category Bar', 'cellcraze' ),
@@ -65,6 +67,22 @@ function cellcraze_setup() {
 	);
 }
 add_action( 'after_setup_theme', 'cellcraze_setup' );
+
+/** Shop filter sidebar (place WooCommerce "Filter by" widgets here). */
+function cellcraze_widgets_init() {
+	register_sidebar(
+		array(
+			'name'          => __( 'Shop Filters', 'cellcraze' ),
+			'id'            => 'cc_shop_filters',
+			'description'   => __( 'Filters shown on the shop/category pages (add WooCommerce Filter-by widgets).', 'cellcraze' ),
+			'before_widget' => '<div class="cc-filter-group %2$s">',
+			'after_widget'  => '</div>',
+			'before_title'  => '<h3 class="cc-filter-title">',
+			'after_title'   => '</h3>',
+		)
+	);
+}
+add_action( 'widgets_init', 'cellcraze_widgets_init' );
 
 /** Add a body class so our CSS is namespaced. */
 function cellcraze_body_class( $classes ) {

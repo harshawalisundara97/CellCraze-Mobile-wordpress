@@ -117,6 +117,35 @@ ul.products.cc-grid { display: grid; gap: 2px; background: var(--color-divider);
 .cc-sq-out { background: var(--color-neutral-400); }  /* 0 */
 
 /* ============================================================================
+   PRODUCT LISTING (1b)
+   ========================================================================== */
+.cc-shop-breadcrumb { padding: 20px 40px 0; font-size: 13px; color: color-mix(in srgb, var(--color-text) 70%, transparent); }
+.cc-shop-titlerow { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 16px 40px 20px; border-bottom: 2px solid var(--color-divider); }
+.cc-shop-title { display: flex; align-items: baseline; gap: 16px; }
+.cc-shop-title h1 { font-size: 56px; font-weight: 800; letter-spacing: -0.03em; margin: 0; }
+.cc-shop-title .woocommerce-result-count { font-size: 15px; color: color-mix(in srgb, var(--color-text) 70%, transparent); margin: 0; }
+.cc-shop-sort .orderby { min-height: 42px; padding: 6px 10px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: 0; font: inherit; font-size: 13px; }
+
+.cc-shop-layout { display: grid; grid-template-columns: 280px 1fr; }
+.cc-shop-filters { border-right: 2px solid var(--color-divider); }
+.cc-filter-group { padding: 24px 28px 24px 40px; border-bottom: 2px solid var(--color-divider); }
+.cc-filter-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 0 0 12px; }
+.cc-shop-filters ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.cc-shop-filters a { text-decoration: none; }
+.cc-shop-filters a:hover { color: var(--color-accent-700); }
+.cc-filter-cats .children { padding-left: 14px; margin-top: 8px; }
+
+/* Main grid: reuse the 2px ruled grid, 3 columns */
+.cc-shop-main ul.products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--color-divider); border-bottom: 2px solid var(--color-divider); list-style: none; margin: 0; padding: 0; }
+.cc-shop-main ul.products > li { background: var(--color-bg); }
+
+/* Square pagination */
+.cc-shop-pagination { padding: 24px 40px; }
+.cc-shop-pagination .page-numbers { list-style: none; display: flex; gap: 2px; margin: 0; padding: 0; }
+.cc-shop-pagination .page-numbers li .page-numbers { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--color-divider); text-decoration: none; }
+.cc-shop-pagination .page-numbers li .page-numbers.current { background: var(--color-text); color: var(--color-bg); }
+
+/* ============================================================================
    PRODUCT DETAIL (1c)
    ========================================================================== */
 .single-product div.product { display: grid; grid-template-columns: 7fr 5fr; border-bottom: 2px solid var(--color-divider); }
@@ -201,6 +230,16 @@ ul.products.cc-grid { display: grid; gap: 2px; background: var(--color-divider);
 
   .cc-footer { grid-template-columns: 1fr 1fr; padding: 32px 16px; gap: 24px; }
   .cc-footer-bottom { flex-direction: column; padding: 16px; }
+
+  /* Listing (1b) mobile: filters stack above grid, 2-col products */
+  .cc-shop-titlerow { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; }
+  .cc-shop-title h1 { font-size: 34px; }
+  .cc-shop-breadcrumb { padding: 16px 16px 0; }
+  .cc-shop-layout { grid-template-columns: 1fr; }
+  .cc-shop-filters { border-right: 0; border-bottom: 2px solid var(--color-divider); }
+  .cc-filter-group { padding: 16px; }
+  .cc-shop-main ul.products { grid-template-columns: repeat(2, 1fr); }
+  .cc-shop-pagination { padding: 16px; }
 
   /* PDP (1f) single column */
   .single-product div.product { grid-template-columns: 1fr; }
