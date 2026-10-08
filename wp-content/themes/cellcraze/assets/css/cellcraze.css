@@ -193,6 +193,59 @@ ul.products.cc-grid { display: grid; gap: 2px; background: var(--color-divider);
 .single-product .related ul.products, .single-product .upsells ul.products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; background: var(--color-divider); border-top: 2px solid var(--color-divider); border-bottom: 2px solid var(--color-divider); list-style: none; margin: 0; padding: 0; }
 
 /* ============================================================================
+   CART + CHECKOUT (1d)
+   ========================================================================== */
+.woocommerce-cart .cc-main, .woocommerce-checkout .cc-main { padding: 0; }
+
+/* Step bar */
+.cc-steps { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 2px solid var(--color-divider); }
+.cc-step { display: flex; align-items: center; gap: 12px; padding: 18px 40px; border-right: 2px solid var(--color-divider); font-size: 14px; }
+.cc-step:last-child { border-right: 0; }
+.cc-step-sq { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; border: 1px solid var(--color-divider); }
+.cc-step-done .cc-step-sq { background: var(--color-text); color: var(--color-bg); border-color: var(--color-text); }
+.cc-step-current { font-weight: 800; box-shadow: inset 0 -4px 0 var(--color-accent); }
+.cc-step-current .cc-step-sq { background: var(--color-accent); color: var(--color-bg); border-color: var(--color-accent); }
+.cc-step-upcoming { color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+
+/* Checkout two-column */
+.woocommerce-checkout form.checkout { display: grid; grid-template-columns: 8fr 4fr; gap: 0; }
+.woocommerce-checkout #customer_details { padding: 40px; }
+.woocommerce-checkout #order_review_heading, .woocommerce-checkout #order_review { background: var(--color-surface); padding: 40px; border-left: 2px solid var(--color-divider); }
+.woocommerce-checkout h3 { font-size: 20px; font-weight: 800; }
+.woocommerce form .form-row label { font-size: 12px; color: color-mix(in srgb, var(--color-text) 70%, transparent); }
+.woocommerce form .form-row input.input-text, .woocommerce form .form-row textarea, .woocommerce form .form-row select, .select2-container .select2-selection { min-height: 42px; padding: 6px 10px; background: var(--color-bg); border: 1px solid var(--color-divider); border-radius: 0; font: inherit; font-size: 14px; }
+.woocommerce #payment { background: transparent; }
+.woocommerce #payment ul.payment_methods { border: 0; padding: 0; margin: 0; }
+.woocommerce #payment ul.payment_methods li { border: 1px solid var(--color-divider); padding: 14px 16px; margin-bottom: 2px; list-style: none; }
+.woocommerce #payment div.payment_box { background: var(--color-bg); border: 1px solid var(--color-divider); border-radius: 0; }
+.woocommerce #payment div.payment_box::before { display: none; }
+.woocommerce #payment #place_order, .woocommerce-checkout .wc-proceed-to-checkout .button { width: 100%; min-height: 52px; background: var(--color-accent); color: var(--color-bg); border: 0; border-radius: 0; font-family: var(--font-heading); font-weight: 800; font-size: 15px; text-align: left; padding: 0 20px; cursor: pointer; }
+.woocommerce #payment #place_order:hover { background: var(--color-accent-600); }
+
+/* Cart table */
+.woocommerce-cart table.cart, .woocommerce table.shop_table { border-collapse: collapse; border-radius: 0; border: 0; }
+.woocommerce-cart table.cart th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: color-mix(in srgb, var(--color-text) 60%, transparent); border-bottom: 2px solid var(--color-divider); padding: 12px 40px; text-align: left; }
+.woocommerce-cart table.cart td { border-bottom: 1px solid var(--color-divider); padding: 16px 40px; }
+.woocommerce-cart .cart-collaterals { padding: 0 40px 40px; }
+.woocommerce-cart .cart_totals h2, .woocommerce .cart_totals h2 { font-size: 20px; font-weight: 800; }
+
+/* ============================================================================
+   ORDER TRACKING (1g)
+   ========================================================================== */
+.cc-track { padding: 32px 40px; border-bottom: 2px solid var(--color-divider); }
+.cc-track-head { border-bottom: 2px solid var(--color-divider); padding-bottom: 20px; margin-bottom: 20px; }
+.cc-track-head .cc-muted { font-size: 12px; font-variant-numeric: tabular-nums; margin: 0 0 4px; }
+.cc-track-status { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
+.cc-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.cc-tl { display: grid; grid-template-columns: 20px 1fr; gap: 14px; align-items: center; position: relative; }
+.cc-tl-sq { width: 14px; height: 14px; }
+.cc-tl-done .cc-tl-sq { background: var(--color-text); }
+.cc-tl-current .cc-tl-sq { background: var(--color-accent); }
+.cc-tl-upcoming .cc-tl-sq { background: transparent; border: 2px solid var(--color-neutral-400); }
+.cc-tl-upcoming .cc-tl-label { color: color-mix(in srgb, var(--color-text) 60%, transparent); }
+.cc-tl-label { font-size: 15px; font-weight: 600; }
+
+/* ============================================================================
    FOOTER
    ========================================================================== */
 .cc-footer { display: grid; grid-template-columns: 4fr 2fr 2fr 2fr; gap: 40px; padding: 48px 40px 32px; border-top: 2px solid var(--color-divider); font-size: 14px; }
@@ -240,6 +293,16 @@ ul.products.cc-grid { display: grid; gap: 2px; background: var(--color-divider);
   .cc-filter-group { padding: 16px; }
   .cc-shop-main ul.products { grid-template-columns: repeat(2, 1fr); }
   .cc-shop-pagination { padding: 16px; }
+
+  /* Checkout (1d) mobile: summary stacks below the form */
+  .cc-step { padding: 14px 16px; gap: 8px; }
+  .cc-step-label { font-size: 12px; }
+  .woocommerce-checkout form.checkout { grid-template-columns: 1fr; }
+  .woocommerce-checkout #customer_details { padding: 24px 16px; }
+  .woocommerce-checkout #order_review_heading, .woocommerce-checkout #order_review { padding: 24px 16px; border-left: 0; border-top: 2px solid var(--color-divider); }
+  .woocommerce-cart table.cart th, .woocommerce-cart table.cart td { padding: 12px 16px; }
+  .woocommerce-cart .cart-collaterals { padding: 0 16px 24px; }
+  .cc-track { padding: 24px 16px; }
 
   /* PDP (1f) single column */
   .single-product div.product { grid-template-columns: 1fr; }

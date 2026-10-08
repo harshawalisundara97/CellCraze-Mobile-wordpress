@@ -265,3 +265,69 @@ function cellcraze_pdp_specifications() {
 	echo '</div></section>';
 }
 add_action( 'woocommerce_after_single_product_summary', 'cellcraze_pdp_specifications', 15 );
+
+/* ============================================================================
+ * Checkout (1d) & Order tracking (1g) — step bar + status timeline via hooks.
+ * ========================================================================== */
+
+/**
+ * Render the 3-step progress bar.
+ *
+ * @param int $current 1 Cart, 2 Delivery & payment, 3 Confirmation.
+ */
+function cellcraze_step_bar( $current ) {
+	$steps = array( 1 => 'Cart', 2 => 'Delivery &amp; payment', 3 => 'Confirmation' );
+	echo '<div class="cc-steps">';
+	foreach ( $steps as $n => $label ) {
+		$state = ( $n < $current ) ? 'done' : ( ( $n === $current ) ? 'current' : 'upcoming' );
+		printf(
+			'<div class="cc-step cc-step-%1$s"><span class="cc-step-sq">%2$s</span><span class="cc-step-label">%3$s</span></div>',
+			esc_attr( $state ),
+			( 'done' === $state ) ? '&check;' : esc_html( sprintf( '%02d', $n ) ),
+			wp_kses_post( $label )
+		);
+	}
+	echo '</div>';
+}
+add_action( 'woocommerce_before_cart', function () { cellcraze_step_bar( 1 ); } );
+add_action( 'woocommerce_before_checkout_form', function () { cellcraze_step_bar( 2 ); }, 5 );
+
+/**
+ * Order status timeline (design 1g) on the order-received and view-order pages.
+ *
+ * @param WC_Order $order Order.
+ */
+function cellcraze_order_timeline( $order ) {
+	if ( ! $order instanceof WC_Order ) {
+		return;
+	}
+	// Linear fulfilment path we surface to the customer.
+	$flow = array(
+		'pending'    => 'Order placed',
+		'processing' => 'Payment confirmed',
+		'on-hold'    => 'Processing',
+		'completed'  => 'Shipped &amp; completed',
+	);
+	$order_status = $order->get_status();
+	$rank = array( 'pending' => 0, 'on-hold' => 1, 'processing' => 2, 'completed' => 3, 'cancelled' => -1, 'refunded' => -1, 'failed' => -1 );
+	$current_rank = isset( $rank[ $order_status ] ) ? $rank[ $order_status ] : 0;
+
+	echo '<section class="cc-track">';
+	echo '<div class="cc-track-head"><p class="cc-muted">Order ' . esc_html( $order->get_order_number() ) . ' &middot; Placed ' . esc_html( wc_format_datetime( $order->get_date_created(), 'D j M' ) ) . '</p>';
+	echo '<h1 class="cc-track-status">' . esc_html( wc_get_order_status_name( $order_status ) ) . '</h1></div>';
+
+	echo '<ol class="cc-timeline">';
+	$i = 0;
+	foreach ( $flow as $status => $label ) {
+		$srank = $rank[ $status ];
+		$state = ( $srank < $current_rank ) ? 'done' : ( ( $srank === $current_rank ) ? 'current' : 'upcoming' );
+		echo '<li class="cc-tl cc-tl-' . esc_attr( $state ) . '"><span class="cc-tl-sq"></span><span class="cc-tl-label">' . wp_kses_post( $label ) . '</span></li>';
+		$i++;
+	}
+	echo '</ol></section>';
+}
+add_action( 'woocommerce_view_order', 'cellcraze_order_timeline', 5 );
+add_action( 'woocommerce_thankyou', function ( $order_id ) {
+	$order = wc_get_order( $order_id );
+	cellcraze_order_timeline( $order );
+}, 5 );
