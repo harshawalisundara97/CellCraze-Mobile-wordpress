@@ -34,6 +34,8 @@ services:
       - wp-data:/var/www/html
       # Mount our version-controlled child theme straight into WordPress.
       - ./wp-content/themes/cellcraze:/var/www/html/wp-content/themes/cellcraze
+      # Mount our custom plugin (IMEI tracking + POS/channel glue).
+      - ./wp-content/plugins/cellcraze-core:/var/www/html/wp-content/plugins/cellcraze-core
 
   # Runs wp-cli against the same files/volume as the wordpress service.
   # Used to execute the setup scripts; it is not a long-running service.
@@ -60,6 +62,7 @@ services:
     volumes:
       - wp-data:/var/www/html
       - ./wp-content/themes/cellcraze:/var/www/html/wp-content/themes/cellcraze
+      - ./wp-content/plugins/cellcraze-core:/var/www/html/wp-content/plugins/cellcraze-core
       - ./scripts:/scripts
       - ./data:/data
     entrypoint: ["sh"]

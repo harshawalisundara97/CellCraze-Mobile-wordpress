@@ -8,7 +8,10 @@ wp-data/
 # WordPress core + uploads are NOT version controlled.
 # We only track our own theme, scripts, and data.
 wp-content/uploads/
-wp-content/plugins/
+# Ignore third-party plugins (installed from wordpress.org on the server)...
+wp-content/plugins/*
+# ...but DO track our own custom plugin.
+!wp-content/plugins/cellcraze-core
 wp-content/upgrade/
 wp-content/cache/
 
