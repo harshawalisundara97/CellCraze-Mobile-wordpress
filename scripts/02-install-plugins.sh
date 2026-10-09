@@ -25,6 +25,12 @@ for slug in $PLUGINS; do
   fi
 done
 
+# Our own bundled plugin (not a wp.org slug): activate it in place.
+if wp plugin is-installed cellcraze-core 2>/dev/null; then
+  wp plugin activate cellcraze-core 2>/dev/null || true
+  echo "    cellcraze-core activated (IMEI / serial tracking)."
+fi
+
 # NOTE: Sri Lankan card gateways (PayHere / WebXPay) and Stripe are configured
 # on the LIVE host with real API keys — not in local dev. See README.
 echo "    Done. Card gateway plugins are added live (see README)."
