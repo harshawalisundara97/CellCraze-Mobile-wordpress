@@ -90,3 +90,93 @@ Keys: `[x]` done · `[~]` in progress · `[ ]` todo. Keep this updated as work p
 `docs/MULTI-SITE-WORKFLOW.md` (managing nuvirahub / nuvirashop / cellcraze together).
 
 **Before each commit:** `php -l` every changed PHP file. One task ≈ one commit on the work branch.
+
+---
+
+## UI/UX Design Standards (permanent)
+
+Apply these to **every** task that builds, modifies, refactors or improves any interface —
+customer storefront, account, and the admin / POS / inventory / IMEI / purchasing / orders /
+delivery / reports screens **we control**. Backend-only tasks must leave the UI untouched.
+
+**Precedence (read this first):**
+1. The existing **"Modernist" design system** (`assets/css/tokens.css`,
+   `assets/css/cellcraze.css`) is the source of truth for the **customer storefront**. Its brand
+   rules win there: **zero border radius, 2px section rules, one red accent `#ec3013`, Archivo,
+   grayscale photography, no glassmorphism.** Do **not** introduce rounded corners or glass on the
+   storefront — it would break brand consistency.
+2. The standards below set the **universal quality bar** (hierarchy, spacing, accessibility,
+   responsive, states) and additionally govern **admin/POS/dashboard surfaces we build**, which
+   have no Modernist handoff. Corner radii and *selective* glassmorphism are allowed **only** on
+   those admin/POS/dashboard surfaces, never on the storefront.
+3. Functional correctness, accessibility, readability, security and business usability **always**
+   outrank visual decoration.
+
+**Overall direction:** modern, premium, professional, trustworthy — a real commercial product, not
+a default WordPress/admin look. Inspect the existing design system before adding any new style.
+
+**Visual quality (all surfaces):** deliberate layout & spacing; clear visual hierarchy; consistent
+typography and sizing; cohesive palette; accessible contrast; clean alignment and consistent
+component sizing; refined borders and subtle shadows (radii per precedence above); consistent,
+professional icons; consistent product imagery; designed loading / empty / error / success states.
+
+**Glassmorphism:** admin/POS/dashboard only, and only where it helps (floating nav, modal overlays,
+contextual panels, hero/dashboard sections). Subtle translucency + blur + fine borders; never on
+every component; never at the cost of readability, contrast or performance. Never on the storefront.
+
+**Reusable components:** prefer existing theme components and helpers
+(`cellcraze_stock_indicator()`, `cellcraze_brand()`, `Cellcraze_Flat_Walker`, cards, chips, buttons)
+and improve them rather than duplicating. Keep consistent padding, spacing, borders, radii,
+typography and interaction states across product/category/stat/dashboard cards, status & filter
+chips, tabs/segmented controls, search bars, dropdowns, buttons (clear hierarchy), labelled+validated
+inputs, modal/confirmation dialogs, readable tables, toasts/inline feedback, breadcrumbs, pagination,
+skeleton loaders and empty states. No decorative card/chip/badge without a functional reason.
+
+**Motion:** subtle, fast, purposeful transitions (hover/focus, button feedback, card hover,
+dropdown/modal, tabs/nav, loading/progress). No decorative or distracting movement, no parallax, no
+animation that delays an action. Honor `prefers-reduced-motion`.
+
+**Responsive:** must work on phone, tablet, laptop, desktop — responsive layouts, sensible
+breakpoints, touch-friendly targets, readable type. Grids, nav, tables, forms, dashboards and POS
+screens adapt to their intended devices. Admin/cashier UIs prioritise speed, readability and
+efficient daily operation. Never assume desktop-only.
+
+**E-commerce UX:** make it easy to discover, compare, understand availability, pick variants, see
+warranty, add to cart, check out with minimal friction, choose delivery/payment, understand
+order/payment status, track delivery, and request support/returns/warranty. Clear CTAs, helpful
+microcopy, descriptive labels, understandable errors.
+
+**Admin / inventory / POS UX:** accuracy, efficiency, clarity. Clear tables with search/sort/filter,
+status chips, quick actions, useful dashboard summaries, clear stock/order indicators, good forms,
+**confirmation dialogs for destructive or financial actions**, visible validation + success/error
+feedback, loading/empty states. **SKU, IMEI, order number and transaction reference must be easy to
+find and read.** Never use colour as the *only* status signal. Never hide business-critical info
+behind decoration. (Reminder: **never expose available-stock IMEI serials to customers**; a
+customer sees only their own purchased unit's warranty/IMEI.)
+
+**Accessibility:** sufficient contrast, keyboard operability, visible focus, correct form labels,
+clear validation, accessible button names, adequate touch targets, clear hierarchy, reduced-motion
+support.
+
+**Technical consistency:** before UI changes, inspect current theme/components/conventions; reuse
+and improve existing components; avoid duplicate/conflicting CSS; follow WordPress/WooCommerce
+conventions and the repo architecture; never edit third-party plugin files (use the theme or
+`cellcraze-core` extension points); keep it maintainable, performant, secure; test responsive
+behaviour. **Do not add a new frontend/CSS/animation/UI library without checking compatibility and
+explaining why.** If a third-party theme/plugin UI can't be safely customised, state the limitation
+and propose a compatible solution.
+
+**Mandatory pre-completion UI/UX review** — a feature is not "done" until, for any UI it touches:
+reuse relevant components; apply these standards; ensure visual consistency; verify
+mobile/tablet/desktop; verify hover/focus/active/disabled/loading/success/error states; verify
+accessibility; remove inconsistent/duplicated styling the change introduced; run available tests;
+and report any unresolved UI/UX issues. Do not ship a working feature with default/unstyled/
+inconsistent UI when styling is in scope.
+
+**Quality gate (ask before declaring a UI task done):** does it look like a modern professional
+commercial site? Is hierarchy clear? Are spacing/type/colour/components consistent? Are glass &
+motion purposeful not excessive? Is it responsive? Is the workflow easy for customer/owner/cashier?
+Are loading/empty/error/success states handled? Is existing functionality preserved? Are the
+relevant interactions tested? If any important answer is "no", improve before completing.
+
+These are permanent project standards — apply them to every relevant task without being re-asked.
