@@ -195,24 +195,77 @@ class Cellcraze_IMEI_Admin {
 		$warranty   = isset( $_POST['warranty_months'] ) ? absint( $_POST['warranty_months'] ) : 0;
 		$supplier   = isset( $_POST['supplier'] ) ? sanitize_text_field( wp_unslash( $_POST['supplier'] ) ) : '';
 
-		$imeis = preg_split( '/[\s,]+/', $raw, -1, PREG_SPLIT_NO_EMPTY );
-		$added = 0;
+		$imeis  = preg_split( '/[\s,]+/', $raw, -1, PREG_SPLIT_NO_EMPTY );
+		$result = self::receive(
+			$product_id,
+			$imeis,
+			array(
+				'cost'            => $cost,
+				'warranty_months' => $warranty,
+				'supplier'        => $supplier,
+			)
+		);
+
+		$this->redirect_back( $product_id, array( 'cc_added' => $result['added'] ) );
+	}
+
+	/**
+	 * Receive one or more units into inventory: create IMEI rows AND increase
+	 * WooCommerce stock by the number actually added. Single source of truth
+	 * for the stock-sync behaviour, shared by the admin handler and tests.
+	 *
+	 * @param int   $product_id Product id.
+	 * @param array $imeis      IMEI/serial strings.
+	 * @param array $meta       Optional cost/warranty_months/supplier/note.
+	 * @return array { added:int, skipped:int }
+	 */
+	public static function receive( $product_id, $imeis, $meta = array() ) {
+		$added   = 0;
+		$skipped = 0;
 		foreach ( (array) $imeis as $imei ) {
+			$imei = trim( (string) $imei );
+			if ( '' === $imei ) {
+				continue;
+			}
 			$result = Cellcraze_IMEI_DB::add_unit(
-				array(
-					'imei'            => $imei,
-					'product_id'      => $product_id,
-					'cost'            => $cost,
-					'warranty_months' => $warranty,
-					'supplier'        => $supplier,
+				array_merge(
+					$meta,
+					array(
+						'imei'       => $imei,
+						'product_id' => absint( $product_id ),
+					)
 				)
 			);
-			if ( ! is_wp_error( $result ) ) {
+			if ( is_wp_error( $result ) ) {
+				$skipped++;
+			} else {
 				$added++;
 			}
 		}
+		if ( $added > 0 ) {
+			self::adjust_stock( $product_id, $added );
+		}
+		return array( 'added' => $added, 'skipped' => $skipped );
+	}
 
-		$this->redirect_back( $product_id, array( 'cc_added' => $added ) );
+	/**
+	 * Increase/decrease a product's managed stock by a delta, enabling stock
+	 * management if it is off. Keeps Woo stock aligned with IMEI intake.
+	 *
+	 * @param int $product_id Product id.
+	 * @param int $delta      Positive to add, negative to remove.
+	 */
+	private static function adjust_stock( $product_id, $delta ) {
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			return;
+		}
+		if ( ! $product->get_manage_stock() ) {
+			$product->set_manage_stock( true );
+			$product->save();
+		}
+		$operation = $delta >= 0 ? 'increase' : 'decrease';
+		wc_update_product_stock( $product, abs( $delta ), $operation );
 	}
 
 	/**
@@ -228,7 +281,12 @@ class Cellcraze_IMEI_Admin {
 
 		$unit = Cellcraze_IMEI_DB::get( $id );
 		if ( $unit && Cellcraze_IMEI_DB::STATUS_SOLD !== $unit->status ) {
+			$was_available = ( Cellcraze_IMEI_DB::STATUS_AVAILABLE === $unit->status );
 			Cellcraze_IMEI_DB::delete( $id );
+			// Removing an available unit reduces sellable stock by one.
+			if ( $was_available ) {
+				self::adjust_stock( $product_id, -1 );
+			}
 		}
 		$this->redirect_back( $product_id, array( 'cc_deleted' => 1 ) );
 	}
