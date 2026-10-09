@@ -219,21 +219,36 @@ class Cellcraze_IMEI_DB {
 	}
 
 	/**
-	 * Mark a unit sold against an order.
+	 * Atomically claim a unit for an order (compare-and-set).
+	 *
+	 * The UPDATE only succeeds when the row is still `available`, so two
+	 * concurrent sales (e.g. web + POS) can never both claim the same unit:
+	 * exactly one UPDATE affects the row, the other affects zero rows. This is
+	 * the guard against IMEI double-allocation (audit issue CC-03).
 	 *
 	 * @param int $id       Row id.
 	 * @param int $order_id Order id.
-	 * @return bool
+	 * @return bool True only if THIS call transitioned the unit to sold.
 	 */
 	public static function mark_sold( $id, $order_id ) {
-		return self::update(
-			$id,
-			array(
-				'status'   => self::STATUS_SOLD,
-				'order_id' => absint( $order_id ),
-				'sold_at'  => current_time( 'mysql' ),
+		global $wpdb;
+		$table = self::table();
+		$now   = current_time( 'mysql' );
+
+		// wpdb->query returns the number of rows changed for an UPDATE.
+		$affected = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table} SET status = %s, order_id = %d, sold_at = %s, updated_at = %s WHERE id = %d AND status = %s", // phpcs:ignore WordPress.DB
+				self::STATUS_SOLD,
+				absint( $order_id ),
+				$now,
+				$now,
+				absint( $id ),
+				self::STATUS_AVAILABLE
 			)
 		);
+
+		return ( 1 === (int) $affected );
 	}
 
 	/**

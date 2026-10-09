@@ -165,7 +165,15 @@ class Cellcraze_REST {
 			);
 		}
 
-		Cellcraze_IMEI_DB::mark_sold( $unit->id, $order_id );
+		// Atomic claim — guards against the unit being sold by a concurrent
+		// request between the status check above and this write (CC-03).
+		if ( ! Cellcraze_IMEI_DB::mark_sold( $unit->id, $order_id ) ) {
+			return new WP_Error(
+				'cellcraze_unit_taken',
+				__( 'That unit was just claimed by another sale. Pick a different one.', 'cellcraze-core' ),
+				array( 'status' => 409 )
+			);
+		}
 
 		// Append to the matching line item's IMEI meta for receipts/invoices.
 		foreach ( $order->get_items() as $item ) {
@@ -178,7 +186,8 @@ class Cellcraze_REST {
 			}
 			$pid = $product->is_type( 'variation' ) ? $product->get_parent_id() : $product->get_id();
 			if ( (int) $pid === (int) $unit->product_id ) {
-				$imeis   = (array) $item->get_meta( '_cellcraze_imeis', true );
+				$imeis   = $item->get_meta( '_cellcraze_imeis', true );
+				$imeis   = is_array( $imeis ) ? array_values( array_filter( $imeis, 'strlen' ) ) : array();
 				$imeis[] = $unit->imei;
 				$item->update_meta_data( '_cellcraze_imeis', $imeis );
 				$item->update_meta_data( __( 'IMEI / Serial', 'cellcraze-core' ), implode( ', ', $imeis ) );

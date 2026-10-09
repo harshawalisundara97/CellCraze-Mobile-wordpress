@@ -78,21 +78,33 @@ class Cellcraze_IMEI_Orders {
 			$qty        = (int) $item->get_quantity();
 
 			// How many units already tied to this exact line item?
-			$assigned_meta = (array) $item->get_meta( '_cellcraze_imeis', true );
+			// Normalize: an unset meta is '' which (array) casts to [""] — a
+			// phantom element that would under-count what is needed.
+			$assigned_meta = $item->get_meta( '_cellcraze_imeis', true );
+			$assigned_meta = is_array( $assigned_meta ) ? array_values( array_filter( $assigned_meta, 'strlen' ) ) : array();
 			$need          = $qty - count( $assigned_meta );
 			if ( $need <= 0 ) {
 				continue;
 			}
 
-			$units = Cellcraze_IMEI_DB::get_available( $product_id, 0, $need );
-			if ( empty( $units ) ) {
+			// Fetch more candidates than strictly needed so that if a unit is
+			// claimed by a concurrent sale (compare-and-set fails) we can fall
+			// through to the next available one instead of under-assigning.
+			$pool = Cellcraze_IMEI_DB::get_available( $product_id, 0, max( $need + 5, $need * 2 ) );
+			if ( empty( $pool ) ) {
 				continue;
 			}
 
-			$imeis = $assigned_meta;
-			foreach ( $units as $unit ) {
+			$imeis   = $assigned_meta;
+			$claimed = 0;
+			foreach ( $pool as $unit ) {
+				if ( $claimed >= $need ) {
+					break;
+				}
+				// Atomic claim — only succeeds if the unit is still available.
 				if ( Cellcraze_IMEI_DB::mark_sold( $unit->id, $order_id ) ) {
 					$imeis[] = $unit->imei;
+					$claimed++;
 				}
 			}
 
