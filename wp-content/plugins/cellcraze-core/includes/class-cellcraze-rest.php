@@ -37,7 +37,9 @@ class Cellcraze_REST {
 	 * @return bool
 	 */
 	public function can_manage() {
-		return current_user_can( 'manage_woocommerce' );
+		// Custom cap so Cashier/Warehouse roles can use the POS IMEI API without
+		// full WooCommerce management rights. Admin + shop_manager also hold it.
+		return current_user_can( 'cellcraze_manage_imei' ) || current_user_can( 'manage_woocommerce' );
 	}
 
 	/**
