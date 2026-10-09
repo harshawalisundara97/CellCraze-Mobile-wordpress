@@ -1,0 +1,124 @@
+# CI on pull requests + deploy to phoneshop.nuvirahub.com on push to main.
+# Deploys ONLY the theme/plugin folders listed in DEPLOY_PATHS (code only —
+# never WordPress core, wp-config.php, uploads, or the database).
+
+name: CI & Deploy (phoneshop)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-phoneshop
+  cancel-in-progress: false
+
+env:
+  # Repo-relative folders to deploy. Each is synced to the same relative path
+  # under REMOTE_WP_ROOT. Must live under wp-content/themes/ or wp-content/plugins/.
+  # Plugins are installed on the server via WP admin, not deployed from git.
+  DEPLOY_PATHS: |
+    wp-content/themes/cellcraze
+    wp-content/plugins/cellcraze-core
+  REMOTE_WP_ROOT: /home/nuviwviu/phoneshop.nuvirahub.com
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate DEPLOY_PATHS
+        run: |
+          set -euo pipefail
+          while IFS= read -r p; do
+            [ -z "$p" ] && continue
+            case "$p" in
+              *CHANGE_ME*) echo "::error::DEPLOY_PATHS still has placeholder: $p"; exit 1 ;;
+              wp-content/themes/?*|wp-content/plugins/?*) ;;
+              *) echo "::error::$p must be under wp-content/themes/ or wp-content/plugins/"; exit 1 ;;
+            esac
+            case "$p" in *..*) echo "::error::'..' not allowed in $p"; exit 1 ;; esac
+            [ -d "$p" ] || { echo "::error::$p does not exist in repo"; exit 1; }
+          done <<< "$DEPLOY_PATHS"
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: none
+
+      - name: PHP syntax check
+        run: |
+          set -euo pipefail
+          while IFS= read -r p; do
+            [ -z "$p" ] && continue
+            find "$p" -name '*.php' -not -path '*/vendor/*' -not -path '*/node_modules/*' -print0 \
+              | xargs -0 -r -n1 php -l > /dev/null
+          done <<< "$DEPLOY_PATHS"
+          echo "PHP lint passed"
+
+  deploy:
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node (only used if a folder has package.json)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build assets (if any)
+        run: |
+          set -euo pipefail
+          while IFS= read -r p; do
+            [ -z "$p" ] && continue
+            if [ -f "$p/package.json" ]; then
+              echo "Building $p"
+              (cd "$p" && npm ci && npm run build --if-present)
+            fi
+            if [ -f "$p/composer.json" ]; then
+              echo "Composer install in $p"
+              (cd "$p" && composer install --no-dev --optimize-autoloader --no-interaction)
+            fi
+          done <<< "$DEPLOY_PATHS"
+
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Rsync to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          SSH="ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=yes"
+          while IFS= read -r p; do
+            [ -z "$p" ] && continue
+            echo "Deploying $p"
+            # --delete is scoped to this one theme/plugin folder only.
+            rsync -az --delete \
+              --exclude '.git*' --exclude 'node_modules/' --exclude '.github/' \
+              --exclude 'tests/' --exclude '.env*' --exclude '*.log' \
+              -e "$SSH" \
+              "$p/" "$SSH_USER@$SSH_HOST:$REMOTE_WP_ROOT/$p/"
+          done <<< "$DEPLOY_PATHS"
+
+      - name: Cleanup key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

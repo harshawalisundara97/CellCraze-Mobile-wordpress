@@ -25,10 +25,10 @@ for slug in $PLUGINS; do
   fi
 done
 
-# Activate the bundled custom plugin (IMEI tracking + POS/channel glue).
+# Our own bundled plugin (IMEI tracking + POS/channel glue), not a wp.org slug.
 if wp plugin is-installed cellcraze-core 2>/dev/null; then
   wp plugin activate cellcraze-core 2>/dev/null || true
-  echo "    cellcraze-core activated."
+  echo "    cellcraze-core activated (IMEI / serial tracking)."
 else
   echo "    cellcraze-core not found in wp-content/plugins — skipping (copy the folder there)."
 fi

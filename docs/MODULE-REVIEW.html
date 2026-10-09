@@ -1,0 +1,335 @@
+<title>CellCraze Module Review</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --surface: #ffffff; --ink: #16181d; --muted: #5c636e; --line: #e2e5ea; --accent: #0a6cff;
+    --done: #1a7f4b; --done-bg: #e3f5ea; --part: #9a6b00; --part-bg: #fbf0d4; --miss: #b3261e; --miss-bg: #fbe3e1;
+    --na: #5c636e; --na-bg: #eceef1; --broke:#7a1fa2; --broke-bg:#f3e3f9;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; --sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg:#0e1013; --surface:#171a1f; --ink:#eceef1; --muted:#9aa2ad; --line:#282d34; --accent:#4f93ff;
+    --done:#4ccb86; --done-bg:#12301f; --part:#e6b23c; --part-bg:#332710; --miss:#ff6b63; --miss-bg:#3a1512;
+    --na:#9aa2ad; --na-bg:#20242a; --broke:#d08cf0; --broke-bg:#2c1538; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg:#0e1013; --surface:#171a1f; --ink:#eceef1; --muted:#9aa2ad; --line:#282d34; --accent:#4f93ff;
+    --done:#4ccb86; --done-bg:#12301f; --part:#e6b23c; --part-bg:#332710; --miss:#ff6b63; --miss-bg:#3a1512;
+    --na:#9aa2ad; --na-bg:#20242a; --broke:#d08cf0; --broke-bg:#2c1538; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.5; margin: 0; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding-block: 2.2rem 4rem; padding-inline: 16px; }
+  header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; letter-spacing: -.02em; margin: 0 0 .3rem; text-wrap: balance; }
+  header .sub { color: var(--muted); max-width: 62ch; margin: 0 0 1.2rem; }
+  .meta { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; font-size: .82rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 1rem; }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px,1fr)); gap: .6rem; margin: 1.6rem 0; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: .75rem .8rem; cursor: pointer; text-align: left; font: inherit; color: inherit; transition: border-color .12s; }
+  .tile:hover { border-color: var(--accent); }
+  .tile[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .tile .n { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  .tile .l { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-top: .35rem; display: block; }
+  .tile .dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: .3rem; }
+  .toolbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding: .7rem 0; display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); }
+  .toolbar input { flex: 1 1 220px; min-width: 0; background: var(--surface); border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: .5rem .7rem; font: inherit; }
+  .toolbar input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .count { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .legend { display: flex; flex-wrap: wrap; gap: .4rem; margin: 1rem 0 .4rem; }
+  .chip { font-size: .72rem; font-weight: 600; padding: .18rem .5rem; border-radius: 999px; white-space: nowrap; }
+  .c-done { color: var(--done); background: var(--done-bg); } .c-part { color: var(--part); background: var(--part-bg); }
+  .c-miss { color: var(--miss); background: var(--miss-bg); } .c-na { color: var(--na); background: var(--na-bg); }
+  .c-broke{ color: var(--broke);background: var(--broke-bg); }
+  section.cat { margin-top: 1.8rem; }
+  section.cat > h2 { font-size: 1.05rem; font-weight: 800; letter-spacing: -.01em; margin: 0 0 .1rem; display: flex; align-items: baseline; gap: .5rem; }
+  section.cat > h2 .idx { font-family: var(--mono); font-size: .8rem; color: var(--accent); font-weight: 700; }
+  section.cat > p.catnote { color: var(--muted); font-size: .84rem; margin: .1rem 0 .7rem; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: .86rem; }
+  thead th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; padding: .55rem .7rem; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+  tbody td { padding: .55rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { font-family: var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; width: 2.6rem; }
+  td.mod { font-weight: 600; width: 32%; } td.stat { width: 8.5rem; } td.rec { color: var(--muted); } td.rec b { color: var(--ink); font-weight: 600; }
+  tr.hide { display: none; } section.cat.hide { display: none; }
+  footer { margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: 1rem; color: var(--muted); font-size: .8rem; }
+  footer code { font-family: var(--mono); background: var(--na-bg); padding: .05rem .3rem; border-radius: 4px; }
+</style>
+<div class="wrap">
+  <header>
+    <h1>CellCraze Module Review</h1>
+    <p class="sub">All 235 modules from the implementation brief, classified against the current scaffold. The stack has not been provisioned yet, so <b>“Done” means scaffolded by the setup scripts or theme</b> — not runtime-verified. Approach is plugin-first; custom code only where no plugin fits cleanly.</p>
+    <div class="meta">
+      <span><b>Reviewed:</b> 2026-10-09</span><span><b>Branch:</b> claude/sleepy-bohr-xefjt0</span>
+      <span><b>Stack:</b> WordPress + WooCommerce (Storefront child “Modernist”)</span><span><b>Currency:</b> LKR · Sri Lanka</span>
+    </div>
+  </header>
+  <div class="tiles" id="tiles"></div>
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="Filter modules, status, or recommendation…" aria-label="Filter modules">
+    <span class="count" id="count"></span>
+  </div>
+  <div class="legend">
+    <span class="chip c-done">Done / scaffolded</span><span class="chip c-part">Partial</span>
+    <span class="chip c-miss">Missing</span><span class="chip c-broke">Broken</span><span class="chip c-na">Not required</span>
+  </div>
+  <div id="cats"></div>
+  <footer>
+    <p><b>How the scaffold stands today.</b> Six idempotent scripts provision WordPress, nine plugins (WooCommerce, ATUM, PDF Invoices, WP Mail SMTP, TI Wishlist, Rank Math, Wordfence, UpdraftPlus, LiteSpeed), Sri Lanka/LKR settings, COD + bank transfer, a shipping zone, categories, and a sample-CSV import. The <code>cellcraze</code> child theme recreates the Modernist design with a stock indicator and Brand/Storage/Colour attributes. Nothing has been run, so every “Done” is a provisioning claim to verify after first <code>setup.sh</code>.</p>
+    <p><b>Biggest real gaps (custom or paid-plugin territory):</b> POS + cashier/shift/cash-drawer, IMEI/serial capture from purchase→sale→return, shared physical/online stock sync with reservation, supplier purchasing &amp; PO receiving (ATUM PRO), courier/COD settlement, and finance/profit reporting. Review tasks 216–235 from the brief <em>are</em> this report plus the phased build that follows.</p>
+  </footer>
+</div>
+<script>
+const S={done:["Done / scaffolded","c-done"],part:["Partial","c-part"],miss:["Missing","c-miss"],broke:["Broken","c-broke"],na:["Not required","c-na"]};
+const DATA=[
+["1. Customer Website","Storefront + WooCommerce templates deliver most of this; the Modernist child theme already styles it.",[
+ [1,"Home Page","done","<b>front-page.php</b> renders the Modernist homepage."],
+ [2,"Product Categories","done","9 categories created by <b>04-create-categories.sh</b>; category bar menu registered."],
+ [3,"Product Listing","done","WooCommerce shop loop, 3-col grid via <b>loop_shop_columns</b>."],
+ [4,"Product Search","done","WooCommerce core search; add live-search plugin later."],
+ [5,"Filters &amp; Sorting","part","Default Woo sorting only. Add <b>Woo block filters</b> or FacetWP for attribute filtering."],
+ [6,"Product Details","done","Woo single-product template, theme-styled."],
+ [7,"Images &amp; Gallery","done","Gallery zoom/lightbox/slider enabled in <b>functions.php</b>."],
+ [8,"Variations (storage/colour/model)","done","Brand/Storage/Colour attributes auto-registered; use variable products."],
+ [9,"Availability &amp; Stock Status","done","Custom <b>cellcraze_stock_indicator()</b> (out / only-N-left / in stock)."],
+ [10,"Shopping Cart","done","Woo cart page installed via install_pages."],
+ [11,"Checkout","done","Woo checkout page; COD + bank transfer live."],
+ [12,"Registration &amp; Login","done","Woo My Account."],
+ [13,"Guest Checkout","done","Woo default; verify setting is on after setup."],
+ [14,"Profile Management","done","Woo My Account → account details."],
+ [15,"Address Management","done","Woo billing/shipping address book."],
+ [16,"Order History","done","Woo My Account → orders."],
+ [17,"Order Tracking","part","Status visible in account. For parcel tracking add a courier/tracking plugin."],
+ [18,"Order Cancellation","part","No customer-facing cancel. Add a cancel-order plugin or custom endpoint."],
+ [19,"Return &amp; Refund Requests","miss","Add an <b>RMA plugin</b> (WooCommerce Returns/RMA) — no scaffold yet."],
+ [20,"Reviews &amp; Ratings","done","Woo reviews; confirm enabled in settings."],
+ [21,"Wishlist","done","<b>TI WooCommerce Wishlist</b> installed."],
+ [22,"Offers / Coupons","done","Woo coupons core; create in dashboard."],
+ [23,"Related Products","done","Woo related products on single product."],
+ [24,"Contact &amp; Support","part","No contact page/form scaffolded. Add a form plugin + page."],
+ [25,"Terms / Privacy / Return Policy","miss","Create policy pages; link in footer menus (menus already registered)."]]],
+["2. Product &amp; Inventory","WooCommerce + ATUM (free) cover the basics; serial/IMEI and purchasing need ATUM PRO or custom.",[
+ [26,"Product Management","done","Woo products."],
+ [27,"Category &amp; Brand Management","done","Categories scripted; Brand as global attribute."],
+ [28,"Attributes &amp; Variations","done","Brand/Storage/Colour registered."],
+ [29,"SKU Management","done","Woo SKU field; sample CSV uses it."],
+ [30,"IMEI / Serial Numbers","miss","Core gap. Serial-number plugin or custom CPT linking IMEI→product→order. Prefer plugin; custom glue for order assignment."],
+ [31,"Phone Warranty Management","miss","Custom field on product/order + expiry logic, or a warranty plugin."],
+ [32,"Cost &amp; Selling Price","done","Sample CSV has <b>Meta: _cost</b>; ATUM tracks purchase price."],
+ [33,"Bulk Import / Export","done","Woo CSV import; <b>05-import-products.sh</b> + template."],
+ [34,"Manual Initial Entry","done","Dashboard product entry."],
+ [35,"Stock Quantity","done","Woo stock mgmt; ATUM central view."],
+ [36,"Physical Shop Stock","part","ATUM multi-location concept; true POS stock needs POS integration."],
+ [37,"Online Store Stock","done","Woo stock is the online source of truth."],
+ [38,"Shared Inventory Sync","miss","Key work: POS and Woo must read one stock pool. Depends on POS choice."],
+ [39,"Stock Reservation for Orders","part","Woo holds stock for pending orders. Confirm hold-stock minutes configured."],
+ [40,"Low-Stock Alerts","done","Woo low-stock threshold (CSV has it) + ATUM alerts."],
+ [41,"Out-of-Stock Mgmt","done","Woo out-of-stock handling + indicator."],
+ [42,"Stock Adjustment","done","ATUM stock-control / manual edits."],
+ [43,"Stock Movement History","part","ATUM logs some movement; full audit needs ATUM PRO Log add-on."],
+ [44,"Damaged / Lost Stock","part","ATUM inventory logs (PRO) or manual adjustment reason."],
+ [45,"Stock Return Mgmt","miss","Tie to RMA + supplier returns; not scaffolded."],
+ [46,"Inventory Valuation","part","ATUM gives stock value; full COGS valuation in finance phase."],
+ [47,"Multiple Locations","na","Single shop + online. Only if multi-branch — defer."]]],
+["3. Physical Shop POS","Not scaffolded at all. Biggest build. Pick a WooCommerce POS plugin; custom-glue IMEI + cash drawer.",[
+ [48,"Point of Sale","miss","Add a <b>WooCommerce POS</b> plugin (wePOS / Oliver / WooCommerce POS). Phase 1 of POS build."],
+ [49,"Cashier Login &amp; Permissions","miss","POS plugin roles + WP roles; see User Management."],
+ [50,"Search &amp; Barcode Scan","miss","POS plugin barcode support; USB scanner acts as keyboard."],
+ [51,"IMEI Selection at Sale","miss","Custom: depends on IMEI module (30). POS must pick a specific unit."],
+ [52,"Cart &amp; Quantity at POS","miss","Provided by POS plugin."],
+ [53,"Discounts at POS","miss","POS plugin line/cart discounts."],
+ [54,"Cash Payments","miss","POS plugin cash tender."],
+ [55,"Card Terminal (physical)","miss","Record as POS payment type; terminal is offline/manual."],
+ [56,"Bank Transfer at POS","miss","POS payment type."],
+ [57,"Split Payments","part","Some POS plugins support split tender; verify before choosing."],
+ [58,"Receipt / Invoice Print","miss","POS plugin receipt; or PDF Invoices plugin (installed)."],
+ [59,"POS Returns / Refunds","miss","POS plugin refund flow."],
+ [60,"POS Order History","miss","POS orders flow into Woo orders."],
+ [61,"Cash Drawer / Reconciliation","miss","POS plugin feature or custom; rarely in free tiers."],
+ [62,"Shift Open / Close","miss","POS plugin register/shift feature — a selection criterion."],
+ [63,"POS Sales Reports","miss","POS plugin + Woo reports."],
+ [64,"Auto Stock Update after POS","miss","Core of shared-stock-sync (38). Decrement Woo stock on POS sale."]]],
+["4. Order Management","Woo covers online orders; fulfilment extras and IMEI assignment are custom.",[
+ [65,"Online Order Management","done","Woo orders admin."],
+ [66,"Order Status Management","done","Woo statuses; custom statuses via plugin if needed."],
+ [67,"Order Confirmation","done","Woo order-received + email."],
+ [68,"Payment Verification","part","COD/bacs are manual-verify; bank-slip upload (84) needed to complete."],
+ [69,"Processing Workflow","part","Woo status transitions; formal pick/pack workflow needs a plugin."],
+ [70,"Picking &amp; Packing","miss","Add a picking-list plugin, or use PDF packing slips (installed)."],
+ [71,"IMEI Assignment to Orders","miss","Custom glue to IMEI module (30) — record which unit shipped."],
+ [72,"Invoice Generation","done","<b>PDF Invoices &amp; Packing Slips</b> installed."],
+ [73,"Order Notes &amp; History","done","Woo order notes core."],
+ [74,"Partial Fulfilment","na","Defer unless multi-shipment needed."],
+ [75,"Cancellation + Stock Restore","part","Woo restores stock on cancel; customer cancel still missing (18)."],
+ [76,"Return / Refund Processing","miss","Tie to RMA plugin (19)."],
+ [77,"Failed / Unpaid Orders","done","Woo failed/pending statuses + hold-stock cleanup."]]],
+["5. Payments","COD + bank transfer scaffolded. Card gateways are deliberately live-host only.",[
+ [78,"Cash on Delivery","done","Enabled in <b>03-configure-woo.sh</b>."],
+ [79,"Bank Transfer","done","BACS enabled with instructions."],
+ [80,"Online Payment Gateway","part","Deferred to live host by design — PayHere/WebXPay/Stripe with real keys."],
+ [81,"Card Payments (website)","part","Via the gateway above; not in local dev."],
+ [82,"Card Terminal (physical)","miss","POS payment type (55)."],
+ [83,"Payment Status Tracking","done","Woo order payment status."],
+ [84,"Bank Slip Upload","miss","Custom upload field on checkout or My Account for BACS proof."],
+ [85,"Manual Bank Verification","part","Admin marks order paid; slip upload (84) makes it real."],
+ [86,"Transaction Records","done","Woo order + gateway logs once live."],
+ [87,"Failed Payment Handling","done","Woo failed-payment flow."],
+ [88,"Refund Tracking","part","Woo refunds core; reconcile with COD/courier in finance phase."],
+ [89,"Payment Reconciliation","miss","Finance phase — match gateway/COD/bank to orders."],
+ [90,"COD Collection &amp; Settlement","miss","Custom/courier phase — track cash collected by courier."]]],
+["6. Suppliers &amp; Purchasing","ATUM free gives suppliers; purchase orders &amp; receiving are ATUM PRO or custom.",[
+ [91,"Supplier Management","done","ATUM Suppliers (free)."],
+ [92,"Supplier Contacts","done","ATUM supplier fields."],
+ [93,"Purchase Order Management","part","<b>ATUM PRO</b> Purchase Orders — free tier limited. Likely paid add-on."],
+ [94,"Stock Receiving","part","ATUM PRO goods-receipt on PO."],
+ [95,"IMEI at Receiving","miss","Custom: capture IMEIs when a PO is received (depends on 30)."],
+ [96,"Supplier Invoice Recording","part","ATUM PRO / custom meta."],
+ [97,"Purchase Cost Recording","done","ATUM purchase price per product."],
+ [98,"Supplier Payments","miss","ATUM PRO or custom ledger."],
+ [99,"Supplier Returns","miss","Custom / ATUM PRO."],
+ [100,"Purchase History","part","ATUM inventory logs."],
+ [101,"Supplier Balance","miss","Custom ledger / accounting integration."],
+ [102,"Purchase Cost &amp; Valuation","part","ATUM stock valuation."]]],
+["7. Courier &amp; Delivery","Minimal scaffold (shipping zone + pickup). Courier integration is custom or plugin.",[
+ [103,"Courier Service Mgmt","miss","Add a courier plugin for local couriers (Pronto, Koombiyo, etc.)."],
+ [104,"Delivery Method Selection","done","Shipping zone with flat/free/pickup in <b>03-configure-woo.sh</b>."],
+ [105,"Delivery Fee Mgmt","done","Flat Rs 350 / free over Rs 10,000 configured."],
+ [106,"Address Validation","part","Woo required fields; no SL-specific validation."],
+ [107,"Shipment Creation","miss","Courier plugin or custom shipment CPT."],
+ [108,"Tracking Number Recording","miss","Field on order + courier plugin."],
+ [109,"Courier Assignment","miss","Custom / plugin."],
+ [110,"Shipment Status Tracking","miss","Custom / plugin."],
+ [111,"Dispatch / Delivery Confirmation","miss","Order status + courier webhook."],
+ [112,"Failed Delivery Handling","miss","Custom status flow."],
+ [113,"Returned-to-Sender","miss","Custom status + stock restore."],
+ [114,"COD Amount Tracking","miss","Links to 90 — courier COD settlement."],
+ [115,"Courier Fee / Settlement","miss","Finance phase."],
+ [116,"Delivery Reports","miss","Reports phase."]]],
+["8. Finance, Expenses &amp; Profit","Woo has basic sales analytics; true P&amp;L, expenses and COGS need a plugin or custom.",[
+ [117,"Sales Revenue","done","Woo Analytics → Revenue."],
+ [118,"COGS","part","<b>_cost</b> captured; needs a COGS/profit plugin to compute."],
+ [119,"Gross Profit","part","Via COGS plugin (Cost of Goods for Woo)."],
+ [120,"Net Profit","miss","Needs expenses module (121) + reporting."],
+ [121,"Expense Management","miss","No expense ledger in Woo. Add accounting plugin or custom CPT."],
+ [122,"Expense Categories","miss","Part of expense module."],
+ [123,"Rent / Utilities","miss","Expense entries."],
+ [124,"Salaries / Operating","miss","Expense entries."],
+ [125,"Courier / Delivery Expense","miss","Expense + courier settlement."],
+ [126,"Gateway Fees","miss","Expense tracking per gateway."],
+ [127,"Supplier Payment Tracking","miss","Links to 98/101."],
+ [128,"Refund / Return Records","part","Woo refunds; financial rollup in reports."],
+ [129,"Cash Flow Reports","miss","Reporting / accounting plugin."],
+ [130,"Daily Sales Reports","done","Woo Analytics date range."],
+ [131,"Weekly / Monthly Reports","done","Woo Analytics."],
+ [132,"Profit by Product","part","COGS plugin."],
+ [133,"Profit by Category","part","COGS plugin."],
+ [134,"Profit by Channel (online vs POS)","miss","Needs POS data tagged by channel."],
+ [135,"Payment Method Reports","part","Woo Analytics by payment method."],
+ [136,"Tax / Accounting Reports","na","Tax off by default; enable if VAT-registered."],
+ [137,"Expense &amp; Profit Dashboard","miss","Reports phase — combines 117-135."]]],
+["9. Users &amp; Access","WordPress roles cover most; POS/inventory roles and activity logs need plugins.",[
+ [138,"Administrator","done","WP admin role."],
+ [139,"Shop Owner","part","Map to admin or a custom role."],
+ [140,"Manager","part","Woo shop_manager role."],
+ [141,"Cashier","miss","Custom role, created with POS phase."],
+ [142,"Inventory Staff","miss","Custom role (ATUM has capabilities to assign)."],
+ [143,"Order Processing Staff","miss","Custom role."],
+ [144,"Role-Based Access Control","part","WP roles/caps; refine with a role-editor plugin."],
+ [145,"Module-Level Permissions","part","Via caps + role editor."],
+ [146,"User Activity Logs","miss","Add an activity-log plugin (WP Activity Log)."],
+ [147,"Login / Session Security","done","Wordfence installed (hardens login)."],
+ [148,"Password Reset / Recovery","done","WP core + email (needs SMTP live)."]]],
+["10. Notifications","Woo transactional emails exist; SMS/WhatsApp and some alerts are add-ons.",[
+ [149,"New Order Notifications","done","Woo admin email."],
+ [150,"Order Status Notifications","done","Woo customer emails."],
+ [151,"Payment Confirmation","done","Woo emails."],
+ [152,"Low-Stock Notifications","done","Woo + ATUM alerts."],
+ [153,"Warranty / Return Notifications","miss","Depends on warranty (31) / RMA (19)."],
+ [154,"Delivery Notifications","miss","Depends on courier phase."],
+ [155,"Customer Email","done","Woo emails via <b>WP Mail SMTP</b> (configure live)."],
+ [156,"SMS / WhatsApp","miss","Add SMS/WhatsApp plugin + local gateway (Notify.lk, Twilio)."],
+ [157,"Admin / Staff Alerts","part","Woo admin emails; extend per module."]]],
+["11. Reports &amp; Dashboard","Woo Analytics gives the sales side; inventory/IMEI/courier/finance reports follow their modules.",[
+ [158,"Business Overview Dashboard","part","Woo Analytics home; full dashboard in reports phase."],
+ [159,"Total Sales","done","Woo Analytics."],
+ [160,"Online vs Physical","miss","Needs POS channel tagging (134)."],
+ [161,"Orders &amp; Status Summary","done","Woo Analytics / Orders."],
+ [162,"Current Stock Report","done","ATUM stock central."],
+ [163,"Low-Stock Report","done","ATUM / Woo."],
+ [164,"IMEI / Serial Report","miss","Depends on IMEI module (30)."],
+ [165,"Purchase / Supplier Reports","part","ATUM (PRO) reports."],
+ [166,"Payment Reports","part","Woo Analytics."],
+ [167,"COD Pending Collection","miss","Depends on COD settlement (90)."],
+ [168,"Courier / Delivery Reports","miss","Depends on courier phase."],
+ [169,"Expense Reports","miss","Depends on expense module (121)."],
+ [170,"Gross / Net Profit Reports","miss","Depends on COGS + expenses."],
+ [171,"Returns / Refund Reports","part","Woo refunds; RMA data (19)."],
+ [172,"Best-Selling Products","done","Woo Analytics → Products."],
+ [173,"Sales / Profit Trends","part","Woo trends; profit needs COGS."],
+ [174,"Export to CSV / Excel","done","Woo Analytics export."]]],
+["12. WordPress / WooCommerce Technical","Most foundations are scaffolded; integrations and production hardening remain.",[
+ [175,"WordPress Config","done","<b>01-install-wp.sh</b>."],
+ [176,"WooCommerce Config","done","<b>03-configure-woo.sh</b> (LK/LKR, pages, payments, shipping)."],
+ [177,"Theme &amp; Responsive UI","done","<b>cellcraze</b> child theme (Modernist) — verify responsiveness in browser."],
+ [178,"Required Plugins","done","<b>02-install-plugins.sh</b> installs 9 plugins."],
+ [179,"Custom Plugin Dev","part","Needed for IMEI/POS-glue/finance — build as a small CellCraze plugin, not in theme."],
+ [180,"POS ↔ Woo Integration","miss","Core POS phase work (38/64)."],
+ [181,"Shared Stock Sync Logic","miss","Custom glue if POS plugin doesn't fully sync."],
+ [182,"IMEI Tracking Integration","miss","Custom (30)."],
+ [183,"Payment Gateway Integration","part","Live-host only by design."],
+ [184,"Courier Integration","miss","Courier phase."],
+ [185,"Email Config","part","WP Mail SMTP installed; connect real service live."],
+ [186,"DB Structure &amp; Relationships","part","Woo schema + custom tables/CPTs for IMEI/courier to design."],
+ [187,"API &amp; Webhooks","part","Woo REST API available; wire per integration."],
+ [188,"Scheduled Tasks / Cron","part","WP-Cron; move to real cron on live host."],
+ [189,"Error Logging / Monitoring","part","WP debug log; add monitoring live."],
+ [190,"Performance Optimization","done","LiteSpeed Cache installed."],
+ [191,"SEO Config","done","Rank Math installed."],
+ [192,"Backup &amp; Recovery","done","UpdraftPlus installed (schedule live)."],
+ [193,"Security Hardening","done","Wordfence installed (+ SSL/checklist live)."],
+ [194,"Staging / Production Deploy","part","README gives host path; no CI yet."],
+ [195,"Update Management","part","Manual; consider managed updates live."]]],
+["13. Testing &amp; QA","No automated tests scaffolded. A manual QA checklist exists implicitly in the README go-live list.",[
+ [196,"Registration / Login Test","miss","Manual test plan to write."],
+ [197,"Product &amp; Search Test","miss","Manual."],
+ [198,"Cart &amp; Checkout Test","miss","Manual."],
+ [199,"Payment Method Test","miss","Manual (COD/BACS now; gateways live)."],
+ [200,"COD Order Test","miss","Manual."],
+ [201,"Bank Transfer Verify Test","miss","Manual (after slip upload 84)."],
+ [202,"Online Payment Success/Fail Test","miss","Manual on live gateway."],
+ [203,"POS Sales Test","miss","After POS phase."],
+ [204,"Stock Sync Test","miss","After shared-stock phase (38)."],
+ [205,"IMEI Uniqueness / Assignment Test","miss","After IMEI phase (30)."],
+ [206,"Purchase / Receiving Test","miss","After purchasing phase."],
+ [207,"Return / Refund Test","miss","After RMA phase."],
+ [208,"Courier / COD Settlement Test","miss","After courier phase."],
+ [209,"Expense / Profit Calc Test","miss","After finance phase."],
+ [210,"User Permission Test","miss","After roles defined."],
+ [211,"Security Test","part","Wordfence scan; add a go-live pen check."],
+ [212,"Mobile Responsiveness Test","miss","Manual — theme is responsive, verify."],
+ [213,"Performance Test","miss","Manual (LiteSpeed + a speed test)."],
+ [214,"Backup / Restore Test","miss","Manual UpdraftPlus restore drill."],
+ [215,"End-to-End Workflow Test","miss","Full flow after all phases."]]]
+];
+const tiles=document.getElementById("tiles"),cats=document.getElementById("cats");
+const counts={done:0,part:0,miss:0,broke:0,na:0};let total=0;
+DATA.forEach(([title,note,rows])=>{
+ const sec=document.createElement("section");sec.className="cat";const idx=title.split(".")[0];
+ sec.innerHTML=`<h2><span class="idx">${idx}</span>${title.replace(/^\d+\.\s*/,'')}</h2><p class="catnote">${note}</p>`;
+ const tw=document.createElement("div");tw.className="tablewrap";const t=document.createElement("table");
+ t.innerHTML="<thead><tr><th>#</th><th>Module</th><th>Status</th><th>Recommendation</th></tr></thead>";
+ const tb=document.createElement("tbody");
+ rows.forEach(([n,mod,st,rec])=>{counts[st]++;total++;const[label,cls]=S[st];const tr=document.createElement("tr");
+  tr.dataset.text=(mod+" "+label+" "+rec).toLowerCase().replace(/<[^>]+>/g,"");tr.dataset.status=st;
+  tr.innerHTML=`<td class="num">${n}</td><td class="mod">${mod}</td><td class="stat"><span class="chip ${cls}">${label}</span></td><td class="rec">${rec}</td>`;tb.appendChild(tr);});
+ t.appendChild(tb);tw.appendChild(t);sec.appendChild(tw);cats.appendChild(sec);});
+const tileDefs=[["all","All","var(--accent)",total],["done","Done","var(--done)",counts.done],["part","Partial","var(--part)",counts.part],["miss","Missing","var(--miss)",counts.miss],["na","Not req.","var(--na)",counts.na]];
+let activeStatus="all";
+tileDefs.forEach(([key,label,color,n])=>{const b=document.createElement("button");b.className="tile";b.dataset.key=key;b.setAttribute("aria-pressed",key==="all");
+ b.innerHTML=`<span class="n">${n}</span><span class="l">${key!=="all"?`<span class="dot" style="background:${color}"></span>`:""}${label}</span>`;
+ b.addEventListener("click",()=>{activeStatus=key;tiles.querySelectorAll(".tile").forEach(x=>x.setAttribute("aria-pressed",x.dataset.key===key));apply();});tiles.appendChild(b);});
+const q=document.getElementById("q"),countEl=document.getElementById("count");
+function apply(){const term=q.value.trim().toLowerCase();let shown=0;
+ document.querySelectorAll("section.cat").forEach(sec=>{let s=0;
+  sec.querySelectorAll("tbody tr").forEach(tr=>{const okS=activeStatus==="all"||tr.dataset.status===activeStatus;const okT=!term||tr.dataset.text.includes(term);const v=okS&&okT;tr.classList.toggle("hide",!v);if(v){s++;shown++;}});
+  sec.classList.toggle("hide",s===0);});
+ countEl.textContent=`${shown} of ${total} modules`;}
+q.addEventListener("input",apply);apply();
+</script>
