@@ -240,6 +240,19 @@ class Cellcraze_IMEI_Admin {
 				$skipped++;
 			} else {
 				$added++;
+				// Ledger: one +1 stock movement per received unit (idempotent on unit id).
+				Cellcraze_Audit::log(
+					array(
+						'event_key'   => 'receive:' . (int) $result,
+						'event_type'  => 'stock_receive',
+						'object_type' => 'imei_unit',
+						'object_id'   => (int) $result,
+						'product_id'  => absint( $product_id ),
+						'qty_delta'   => 1,
+						'reason'      => 'receiving',
+						'reference'   => isset( $meta['supplier'] ) ? (string) $meta['supplier'] : '',
+					)
+				);
 			}
 		}
 		if ( $added > 0 ) {

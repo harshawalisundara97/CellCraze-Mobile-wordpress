@@ -105,6 +105,23 @@ class Cellcraze_IMEI_Orders {
 				if ( Cellcraze_IMEI_DB::mark_sold( $unit->id, $order_id ) ) {
 					$imeis[] = $unit->imei;
 					$claimed++;
+					// Assignment epoch disambiguates distinct lifecycles of the
+					// same unit+order while staying stable across retries of a
+					// single transition (idempotent). qty_delta null — the qty
+					// movement is recorded via woocommerce_reduce_order_stock.
+					$fresh = Cellcraze_IMEI_DB::get( $unit->id );
+					$epoch = preg_replace( '/[^0-9]/', '', $fresh ? (string) $fresh->sold_at : '' );
+					Cellcraze_Audit::log(
+						array(
+							'event_key'   => 'imei_assign:' . (int) $unit->id . ':' . (int) $order_id . ':' . $epoch,
+							'event_type'  => 'imei_assign',
+							'object_type' => 'imei_unit',
+							'object_id'   => (int) $unit->id,
+							'product_id'  => (int) $product_id,
+							'reason'      => 'order_fulfilment',
+							'reference'   => $order->get_order_number(),
+						)
+					);
 				}
 			}
 
@@ -143,6 +160,23 @@ class Cellcraze_IMEI_Orders {
 		foreach ( $units as $unit ) {
 			if ( Cellcraze_IMEI_DB::restore( $unit->id ) ) {
 				$count++;
+				// Key off the assignment epoch (sold_at of the row being
+				// restored) so a later, legitimately-repeated restore of the
+				// same unit+order is NOT suppressed, while a retried hook in the
+				// same transition stays idempotent. qty movement recorded via
+				// woocommerce_restore_order_stock separately.
+				$epoch = preg_replace( '/[^0-9]/', '', isset( $unit->sold_at ) ? (string) $unit->sold_at : '' );
+				Cellcraze_Audit::log(
+					array(
+						'event_key'   => 'imei_restore:' . (int) $unit->id . ':' . (int) $order_id . ':' . $epoch,
+						'event_type'  => 'imei_restore',
+						'object_type' => 'imei_unit',
+						'object_id'   => (int) $unit->id,
+						'product_id'  => (int) $unit->product_id,
+						'reason'      => 'order_cancel_or_refund',
+						'reference'   => (string) $order_id,
+					)
+				);
 			}
 		}
 

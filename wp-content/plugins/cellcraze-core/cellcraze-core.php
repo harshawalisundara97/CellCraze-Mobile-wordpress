@@ -3,7 +3,7 @@
  * Plugin Name:       CellCraze Core
  * Plugin URI:        https://cellcraze.lk
  * Description:       Custom back-office glue for CellCraze: IMEI/serial tracking, order IMEI assignment, and sales-channel (online vs POS) tagging on top of WooCommerce.
- * Version:           1.1.0
+ * Version:           1.3.0
  * Author:            CellCraze
  * Text Domain:       cellcraze-core
  * Requires at least: 6.0
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CELLCRAZE_CORE_VERSION', '1.1.0' );
+define( 'CELLCRAZE_CORE_VERSION', '1.3.0' );
 define( 'CELLCRAZE_CORE_FILE', __FILE__ );
 define( 'CELLCRAZE_CORE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CELLCRAZE_CORE_URL', plugin_dir_url( __FILE__ ) );
@@ -32,13 +32,17 @@ require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-imei-orders.php';
 require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-channel.php';
 require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-rest.php';
 require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-roles.php';
+require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-bankslip.php';
+require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-audit.php';
 
 /**
  * Activation: create / upgrade the IMEI table + install staff roles.
  */
 function cellcraze_core_activate() {
 	Cellcraze_IMEI_DB::install();
+	Cellcraze_Audit::install();
 	Cellcraze_Roles::install();
+	Cellcraze_BankSlip::private_dir(); // create + harden the private slips dir.
 	add_option( 'cellcraze_core_version', CELLCRAZE_CORE_VERSION );
 }
 register_activation_hook( __FILE__, 'cellcraze_core_activate' );
@@ -71,6 +75,7 @@ function cellcraze_core_init() {
 	// without re-activation (e.g. deployed over FTP).
 	if ( get_option( 'cellcraze_core_version' ) !== CELLCRAZE_CORE_VERSION ) {
 		Cellcraze_IMEI_DB::install();
+		Cellcraze_Audit::install();
 		Cellcraze_Roles::install();
 		update_option( 'cellcraze_core_version', CELLCRAZE_CORE_VERSION );
 	}
@@ -79,6 +84,8 @@ function cellcraze_core_init() {
 	new Cellcraze_IMEI_Orders();
 	new Cellcraze_Channel();
 	new Cellcraze_REST();
+	new Cellcraze_BankSlip();
+	new Cellcraze_Audit();
 }
 add_action( 'plugins_loaded', 'cellcraze_core_init' );
 
