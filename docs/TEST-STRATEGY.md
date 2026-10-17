@@ -35,6 +35,39 @@ acceptance tests.
   status traces, order_stock_reduce (−1)/restore (+1), ledger never mutated
   stock, consistency (available=2 after sale+cancel), viewer gated (guest → 302
   login; `manage_woocommerce` + explicit cap check).
+- **T-102** (integrate slip-verify + role-change into ledger): role_change —
+  events logged on `set_user_role` (≥2 distinct changes), same-key retry
+  suppressed, note holds role slugs only (no PII). slip_verify (real HTTP admin
+  verify) — logged **exactly once after two POSTs** (idempotent), order →
+  processing, actor_id recorded, no PII in ref/note, and a COD verify attempt
+  logged **nothing** (failed/non-applicable). Log-only: no change to verify, IMEI,
+  stock, or role behaviour. (One role-privacy assertion was a test-code bug —
+  empty test-user email made `strpos('')===0`; note verified clean by inspection.)
+- **T-103** (expense module): Part A 9/9 (CLI) — validation rejects
+  negative/bad-date/bad-category/bad-method, amount rounding + length caps, caps
+  (admin+manager yes, cashier no), table created. Part B (real HTTP) — create
+  (+expense_create audit, receipt stored private), **receipt public URL → 403,
+  gated admin → 200 image/png, guest blocked**, unauthorized create rejected,
+  edit (+expense_update), void (soft-delete, row retained, +expense_void once).
+  Accounting boundary respected (no profit/COGS, no supplier auto-import).
+- **Suppliers + Purchasing (PO/GRN)**: E2E via real HTTP admin GRN submit — supplier+ordered PO with an IMEI line (qty 2) and a quantity line (qty 3); partial receive (1 phone+IMEI, 2 accessories) → IMEI unit created with `po_id`, phone stock 20→21, accessory 48→50, PO→partial, 1 GRN row; **idempotent** re-submit of the same `grn_token` = no-op (no dup IMEI, no stock change); **over-receive** (recv 5 vs remaining 1) blocked (stock unchanged, IMEIs not created); completion → phone 22/acc 51, PO→received, 2 IMEI units for the PO. Inventory only via existing authoritative paths. All PASS; `php -l` clean; data cleaned up.
+- **T-104** (COGS + profit report): phone COGS 52000 (live from IMEI), accessory
+  COGS 2400 (snapshot), snapshot stays 2400 after `_cost`→9999, duplicate capture
+  idempotent, serialized auto-reverse after cancel (sold-cost→0); report math over
+  a fixed range — net 5400, COGS 4800, gross profit 600, opex 5000, operating
+  profit −4400, recognized orders=2 (cancelled/pending excluded), out-of-range → 0.
+  All financial assertions PASS.
+- **Channel fix** (ADM-05): `set()` re-fetches a fresh order so an explicit
+  channel wins over the `woocommerce_new_order` default. Verified: pos persists,
+  default online, override both ways, T-104 report channel=pos → 1 order (all → 2).
+- **T-103 review**: 13/13 + id-tamper HTTP. Fresh activation grants the cap to
+  admin+manager; a real `cc_cashier` **user** fails `user_can` (server-side);
+  amount edge cases (zero accepted-by-design, huge/malformed rejected,
+  over-precision rounded); void excluded from an active-only SUM while retained;
+  two same-second updates both log (unique keys) but a true retry dedupes;
+  fail-safe guard refuses to store a receipt when `.htaccess` is missing;
+  **id-tamper**: receipt nonce for id 5 used with id 6 → 403 (correct → 200).
+  Four minimal fixes applied (below).
 - **T-101 review**: 8/8 — DB-verified schema (direct `SHOW TABLES`/`DESCRIBE`,
   not a cast); fresh-activation recreates the table; **retried
   `woocommerce_order_status_processing` adds no second assign row** (CAS);

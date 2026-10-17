@@ -50,17 +50,17 @@ Woo/plugin config, not code).
 | ADM-02 | Product management | CONFIG | Woo products |
 | ADM-03 | IMEI registry + product panel | NOT-VERIFIED | admin UI present (CC-03 stack); not click-tested |
 | ADM-04 | Receiving (IMEI + stock) | VERIFIED | CC-06 |
-| ADM-05 | Channel column (online/POS) | NOT-VERIFIED | `class-cellcraze-channel.php` |
+| ADM-05 | Channel column (online/POS) | **VERIFIED** | `class-cellcraze-channel.php`: `set()` now re-fetches a fresh order instance so an explicit channel wins over the `woocommerce_new_order` default (stale-instance clobber fixed). Verified: pos persists, default online, override both ways, and T-104 report channel filter returns 1 POS / 2 all |
 | ADM-06 | Bank-transfer verify UI | VERIFIED | CC-09 metabox |
 | ADM-07 | Staff roles/permissions | VERIFIED | CC-13 |
-| ADM-08 | Dashboard (real KPIs) | MISSING | no custom dashboard |
-| ADM-09 | Suppliers | CONFIG | ATUM free |
-| ADM-10 | Purchase orders / GRN | BLOCKED | ATUM PRO or custom (decision) |
+| ADM-08 | Dashboard (real KPIs) | **VERIFIED** | `class-cellcraze-dashboard.php`: read-only, real data only — today/month net, gross+operating profit (via `Reports::compute`), online vs POS, orders processing, awaiting bank verification, low-stock, available IMEI, **purchasing (draft/ordered/partial POs, active suppliers, GRN-7d via cheap grouped aggregates)**, needs-attention tables + quick links. Gated `cellcraze_view_reports`. HTTP-verified figures reflect real PO/supplier/stock records |
+| ADM-09 | Suppliers | **VERIFIED** | `class-cellcraze-suppliers.php`: `wp_cellcraze_supplier` table; CRUD + soft deactivate (never hard-deleted, preserves history); validation + cap `cellcraze_receive_stock` |
+| ADM-10 | Purchase orders / GRN | **VERIFIED** | `class-cellcraze-purchasing.php`: `wp_cellcraze_po`/`_po_item`/`_grn`; draft→ordered→partial→received→cancelled; GRN partial receiving reuses `IMEI_Admin::receive()` (IMEI) + `wc_update_product_stock` (qty) — no competing count; UNIQUE grn_token idempotency; over-receive guard; IMEI tagged `po_id`. E2E verified: stock 20→22/48→51, idempotent re-submit no-op, over-receive blocked |
 | ADM-11 | Inventory valuation / movement log | PARTIAL | `_cost`/unit cost captured; **stock-movement ledger built (T-101)**; valuation report still to build |
 | ADM-16 | Stock-movement + audit ledger (`wp_cellcraze_audit`) | **VERIFIED** | `class-cellcraze-audit.php` — T-101: receive(+1/unit), imei_assign/restore (status), order_stock_reduce(-1)/restore(+1); idempotent (UNIQUE event_key + INSERT IGNORE); assign/restore keys include the assignment epoch (sold_at) so retries dedupe but distinct lifecycles log separately. Read-only viewer gated `manage_woocommerce` (guest→302). DB-verified schema; T-101 8/8 + review 8/8 (incl. retry-no-dup & event-identity regressions) |
-| ADM-12 | Expenses | MISSING | no expense module |
-| ADM-13 | Profit/COGS reports | MISSING | needs expense + COGS rules |
-| ADM-14 | Audit log | PARTIAL | **Stock/IMEI events logged (T-101)**; slip-verify/role/expense/price events pending T-102 |
+| ADM-12 | Expenses | **VERIFIED** | `class-cellcraze-expense.php` (T-103): `wp_cellcraze_expense` table; CRUD + date/category filters; server validation (date/category/method/amount/lengths); receipts in private dir (public 403, gated admin 200, guest blocked); soft-delete (void, row retained); cap `cellcraze_manage_expenses` (admin+manager only, cashier excluded); create/update/void logged to T-101 ledger. Part A 9/9 + Part B HTTP CRUD/receipt all green |
+| ADM-13 | Profit/COGS reports | **VERIFIED** | `class-cellcraze-cogs.php` + `class-cellcraze-reports.php` (T-104): order-item COGS snapshot (serialized live from IMEI table w/ auto-reversal on restock; accessory qty×`_cost` frozen); Profit Report page + CSV, cap `cellcraze_view_reports` (admin+manager); ex-tax; recognized sales = processing/completed. Math verified: net/COGS/gross-profit/opex/operating-profit, status exclusions, date boundaries, snapshot-frozen, idempotent. Channel filter verified working (ADM-05 tagging fixed) |
+| ADM-14 | Audit log | PARTIAL | **Stock/IMEI (T-101) + bank-slip verification + staff role-change (T-102) logged**; price-change/expense events pending later tasks |
 | ADM-15 | Analytics (sales) | CONFIG | Woo Analytics |
 
 ## POS / payments / delivery / after-sales
