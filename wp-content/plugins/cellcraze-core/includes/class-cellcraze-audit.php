@@ -148,6 +148,8 @@ class Cellcraze_Audit {
 	public function __construct() {
 		add_action( 'woocommerce_reduce_order_stock', array( $this, 'on_reduce_order_stock' ), 20 );
 		add_action( 'woocommerce_restore_order_stock', array( $this, 'on_restore_order_stock' ), 20 );
+		// T-102: record staff-role changes after WP_User::set_role succeeds.
+		add_action( 'set_user_role', array( $this, 'on_role_change' ), 20, 3 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 	}
 
@@ -208,6 +210,32 @@ class Cellcraze_Audit {
 	}
 
 	/**
+	 * Record a staff-role change after it has succeeded. Logs roles only (not a
+	 * person's name/email) — roles are authorization data, not sensitive PII.
+	 *
+	 * @param int      $user_id   Affected user id.
+	 * @param string   $role      New primary role.
+	 * @param string[] $old_roles Previous roles.
+	 */
+	public function on_role_change( $user_id, $role, $old_roles ) {
+		$old = is_array( $old_roles ) ? implode( ',', array_map( 'sanitize_key', $old_roles ) ) : '';
+		$new = sanitize_key( (string) $role );
+		self::log(
+			array(
+				// Second-resolution timestamp keeps a same-second retry idempotent
+				// while allowing distinct legitimate changes over time.
+				'event_key'   => 'role_change:' . (int) $user_id . ':' . $new . ':' . gmdate( 'YmdHis' ),
+				'event_type'  => 'role_change',
+				'object_type' => 'user',
+				'object_id'   => (int) $user_id,
+				'reason'      => 'staff_role_change',
+				'reference'   => $new,
+				'note'        => trim( $old . ' -> ' . $new, ' -' ),
+			)
+		);
+	}
+
+	/**
 	 * Register the read-only ledger viewer under WooCommerce.
 	 */
 	public function admin_menu() {
@@ -238,9 +266,8 @@ class Cellcraze_Audit {
 			$rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY id DESC LIMIT 200" ); // phpcs:ignore WordPress.DB
 		}
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'Stock & Audit Log', 'cellcraze-core' ); ?></h1>
-			<p class="description"><?php esc_html_e( 'Append-only record of inventory movements and related events. Newest 200 shown.', 'cellcraze-core' ); ?></p>
+		<div class="wrap cc-admin">
+			<div class="cc-head"><div><h1><?php esc_html_e( 'Stock & Audit Log', 'cellcraze-core' ); ?></h1><p class="cc-sub"><?php esc_html_e( 'Append-only record of inventory movements and related events. Newest 200 shown.', 'cellcraze-core' ); ?></p></div></div>
 			<table class="widefat striped">
 				<thead><tr>
 					<th><?php esc_html_e( 'When', 'cellcraze-core' ); ?></th>

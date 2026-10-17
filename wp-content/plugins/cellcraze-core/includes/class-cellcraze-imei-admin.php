@@ -27,23 +27,6 @@ class Cellcraze_IMEI_Admin {
 
 		// Global registry page.
 		add_action( 'admin_menu', array( $this, 'registry_menu' ) );
-
-		add_action( 'admin_enqueue_scripts', array( $this, 'styles' ) );
-	}
-
-	/**
-	 * Light inline styling for the panels.
-	 *
-	 * @param string $hook Current admin page.
-	 */
-	public function styles( $hook ) {
-		$css = '.cellcraze-imei-table{width:100%;border-collapse:collapse;margin:8px 0}'
-			. '.cellcraze-imei-table th,.cellcraze-imei-table td{text-align:left;padding:6px 8px;border-bottom:1px solid #e0e0e0;font-size:12px}'
-			. '.cellcraze-imei-add{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:8px;align-items:end;margin-top:12px}'
-			. '.cellcraze-imei-add label{display:block;font-size:11px;color:#50575e}';
-		wp_register_style( 'cellcraze-imei-admin', false, array(), CELLCRAZE_CORE_VERSION );
-		wp_enqueue_style( 'cellcraze-imei-admin' );
-		wp_add_inline_style( 'cellcraze-imei-admin', $css );
 	}
 
 	/**
@@ -72,7 +55,7 @@ class Cellcraze_IMEI_Admin {
 		$statuses   = Cellcraze_IMEI_DB::statuses();
 		?>
 		<div id="cellcraze_imei_panel" class="panel woocommerce_options_panel">
-			<div class="options_group" style="padding:12px;">
+			<div class="options_group cc-admin" style="padding:12px;">
 				<p>
 					<strong><?php esc_html_e( 'Units for this product', 'cellcraze-core' ); ?></strong>
 					&mdash;
@@ -85,7 +68,8 @@ class Cellcraze_IMEI_Admin {
 					?>
 				</p>
 
-				<table class="cellcraze-imei-table">
+				<div class="cc-table-wrap">
+				<table class="widefat striped">
 					<thead>
 						<tr>
 							<th><?php esc_html_e( 'IMEI / Serial', 'cellcraze-core' ); ?></th>
@@ -103,14 +87,14 @@ class Cellcraze_IMEI_Admin {
 							<?php foreach ( $units as $unit ) : ?>
 								<tr>
 									<td><code><?php echo esc_html( $unit->imei ); ?></code></td>
-									<td><?php echo esc_html( isset( $statuses[ $unit->status ] ) ? $statuses[ $unit->status ] : $unit->status ); ?></td>
+									<td><?php echo self::status_chip( $unit->status ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in helper. ?></td>
 									<td>
 										<?php if ( $unit->order_id ) : ?>
 											<a href="<?php echo esc_url( admin_url( 'post.php?post=' . (int) $unit->order_id . '&action=edit' ) ); ?>">#<?php echo (int) $unit->order_id; ?></a>
 										<?php else : ?>&mdash;<?php endif; ?>
 									</td>
-									<td><?php echo esc_html( wc_price( $unit->cost ) ); ?></td>
-									<td><?php echo (int) $unit->warranty_months; ?><?php esc_html_e( ' mo', 'cellcraze-core' ); ?></td>
+									<td class="cc-num"><?php echo esc_html( wc_price( $unit->cost ) ); ?></td>
+									<td class="cc-num"><?php echo (int) $unit->warranty_months; ?><?php esc_html_e( ' mo', 'cellcraze-core' ); ?></td>
 									<td>
 										<?php if ( Cellcraze_IMEI_DB::STATUS_SOLD !== $unit->status ) : ?>
 											<a href="<?php echo esc_url( $this->delete_url( $unit->id, $product_id ) ); ?>" onclick="return confirm('<?php esc_attr_e( 'Delete this unit?', 'cellcraze-core' ); ?>');"><?php esc_html_e( 'Delete', 'cellcraze-core' ); ?></a>
@@ -121,14 +105,15 @@ class Cellcraze_IMEI_Admin {
 						<?php endif; ?>
 					</tbody>
 				</table>
+				</div>
 
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="cellcraze-imei-add">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="cc-form">
 					<?php wp_nonce_field( 'cellcraze_add_imei', 'cellcraze_imei_nonce' ); ?>
 					<input type="hidden" name="action" value="cellcraze_add_imei" />
 					<input type="hidden" name="product_id" value="<?php echo (int) $product_id; ?>" />
-					<div>
-						<label><?php esc_html_e( 'IMEI / Serial', 'cellcraze-core' ); ?></label>
-						<input type="text" name="imei" required />
+					<div class="full">
+						<label for="cc-imei-input"><?php esc_html_e( 'IMEI / Serial (one per line or comma-separated for bulk entry)', 'cellcraze-core' ); ?></label>
+						<textarea id="cc-imei-input" name="imei" rows="2" required></textarea>
 					</div>
 					<div>
 						<label><?php esc_html_e( 'Cost (LKR)', 'cellcraze-core' ); ?></label>
@@ -142,7 +127,7 @@ class Cellcraze_IMEI_Admin {
 						<label><?php esc_html_e( 'Supplier', 'cellcraze-core' ); ?></label>
 						<input type="text" name="supplier" />
 					</div>
-					<div>
+					<div class="full">
 						<button type="submit" class="button button-primary"><?php esc_html_e( 'Add unit', 'cellcraze-core' ); ?></button>
 					</div>
 				</form>
@@ -319,6 +304,27 @@ class Cellcraze_IMEI_Admin {
 	}
 
 	/**
+	 * Render an IMEI unit status as a coloured chip (shape + text, never colour
+	 * alone). Reuses the canonical status labels; adds no new statuses.
+	 *
+	 * @param string $status Unit status.
+	 * @return string Pre-escaped HTML.
+	 */
+	public static function status_chip( $status ) {
+		$labels = Cellcraze_IMEI_DB::statuses();
+		$label  = isset( $labels[ $status ] ) ? $labels[ $status ] : ucfirst( (string) $status );
+		$map    = array(
+			'available' => 'is-available',
+			'sold'      => 'is-sold',
+			'damaged'   => 'is-damaged',
+			'reserved'  => 'is-reserved',
+			'returned'  => 'is-warn',
+		);
+		$cls = isset( $map[ $status ] ) ? $map[ $status ] : '';
+		return '<span class="cc-chip ' . esc_attr( $cls ) . '">' . esc_html( $label ) . '</span>';
+	}
+
+	/**
 	 * Register the global IMEI registry submenu page.
 	 */
 	public function registry_menu() {
@@ -348,8 +354,8 @@ class Cellcraze_IMEI_Admin {
 			$rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY id DESC LIMIT 200" ); // phpcs:ignore WordPress.DB
 		}
 		?>
-		<div class="wrap">
-			<h1><?php esc_html_e( 'IMEI / Serial Registry', 'cellcraze-core' ); ?></h1>
+		<div class="wrap cc-admin">
+			<div class="cc-head"><div><h1><?php esc_html_e( 'IMEI / Serial Registry', 'cellcraze-core' ); ?></h1><p class="cc-sub"><?php esc_html_e( 'Every physical unit, its status, order and supplier.', 'cellcraze-core' ); ?></p></div></div>
 			<form method="get">
 				<input type="hidden" name="page" value="cellcraze-imei" />
 				<p class="search-box">
@@ -381,7 +387,7 @@ class Cellcraze_IMEI_Admin {
 									echo $name ? esc_html( $name ) : '&mdash;';
 									?>
 								</td>
-								<td><?php echo esc_html( isset( $statuses[ $row->status ] ) ? $statuses[ $row->status ] : $row->status ); ?></td>
+								<td><?php echo self::status_chip( $row->status ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in helper. ?></td>
 								<td>
 									<?php if ( $row->order_id ) : ?>
 										<a href="<?php echo esc_url( admin_url( 'post.php?post=' . (int) $row->order_id . '&action=edit' ) ); ?>">#<?php echo (int) $row->order_id; ?></a>

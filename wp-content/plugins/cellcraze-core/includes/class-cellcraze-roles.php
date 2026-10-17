@@ -81,10 +81,11 @@ class Cellcraze_Roles {
 		);
 
 		// Grant the custom caps to administrator + shop_manager too.
+		// cellcraze_manage_expenses is financial — limited to admin + manager.
 		foreach ( array( 'administrator', 'shop_manager' ) as $slug ) {
 			$role = get_role( $slug );
 			if ( $role ) {
-				foreach ( array( 'cellcraze_use_pos', 'cellcraze_receive_stock', 'cellcraze_manage_imei' ) as $cap ) {
+				foreach ( array( 'cellcraze_use_pos', 'cellcraze_receive_stock', 'cellcraze_manage_imei', 'cellcraze_manage_expenses', 'cellcraze_view_reports' ) as $cap ) {
 					$role->add_cap( $cap );
 				}
 			}
@@ -102,7 +103,7 @@ class Cellcraze_Roles {
 		foreach ( array( 'administrator', 'shop_manager' ) as $slug ) {
 			$role = get_role( $slug );
 			if ( $role ) {
-				foreach ( array( 'cellcraze_use_pos', 'cellcraze_receive_stock', 'cellcraze_manage_imei' ) as $cap ) {
+				foreach ( array( 'cellcraze_use_pos', 'cellcraze_receive_stock', 'cellcraze_manage_imei', 'cellcraze_manage_expenses', 'cellcraze_view_reports' ) as $cap ) {
 					$role->remove_cap( $cap );
 				}
 			}

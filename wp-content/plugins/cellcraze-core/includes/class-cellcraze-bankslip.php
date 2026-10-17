@@ -342,13 +342,23 @@ class Cellcraze_BankSlip {
 		if ( ! $order ) {
 			return;
 		}
+		echo '<div class="cc-admin">';
 		if ( 'bacs' !== $order->get_payment_method() ) {
-			echo '<p>' . esc_html__( 'Not a bank-transfer order.', 'cellcraze-core' ) . '</p>';
+			echo '<p>' . esc_html__( 'Not a bank-transfer order.', 'cellcraze-core' ) . '</p></div>';
 			return;
 		}
 		$slip        = $order->get_meta( self::META_PATH );
 		$verified_by = (int) $order->get_meta( self::META_VERIFIED_BY );
 		$verified_at = $order->get_meta( self::META_VERIFIED_AT );
+
+		// Status chip (shape + text, not colour alone).
+		if ( $verified_by ) {
+			echo '<p><span class="cc-chip is-ok">' . esc_html__( 'Payment verified', 'cellcraze-core' ) . '</span></p>';
+		} elseif ( $slip ) {
+			echo '<p><span class="cc-chip is-warn">' . esc_html__( 'Slip uploaded — awaiting verification', 'cellcraze-core' ) . '</span></p>';
+		} else {
+			echo '<p><span class="cc-chip">' . esc_html__( 'Awaiting bank transfer', 'cellcraze-core' ) . '</span></p>';
+		}
 
 		if ( $slip ) {
 			echo '<p><a class="button" target="_blank" href="' . esc_url( $this->view_url( $order ) ) . '">' . esc_html__( 'View uploaded slip', 'cellcraze-core' ) . '</a></p>';
@@ -358,7 +368,7 @@ class Cellcraze_BankSlip {
 
 		if ( $verified_by ) {
 			$user = get_userdata( $verified_by );
-			echo '<p>' . esc_html( sprintf( /* translators: 1: user 2: datetime */ __( 'Verified by %1$s on %2$s.', 'cellcraze-core' ), $user ? $user->display_name : ( '#' . $verified_by ), $verified_at ) ) . '</p>';
+			echo '<p>' . esc_html( sprintf( /* translators: 1: user 2: datetime */ __( 'Verified by %1$s on %2$s.', 'cellcraze-core' ), $user ? $user->display_name : ( '#' . $verified_by ), $verified_at ) ) . '</p></div>';
 			return;
 		}
 
@@ -370,6 +380,7 @@ class Cellcraze_BankSlip {
 			echo '<button type="submit" class="button button-primary" onclick="return confirm(\'' . esc_js( __( 'Confirm the bank transfer has been received and mark this order paid?', 'cellcraze-core' ) ) . '\');">' . esc_html__( 'Mark bank transfer verified', 'cellcraze-core' ) . '</button>';
 			echo '</form>';
 		}
+		echo '</div>';
 	}
 
 	/**
@@ -409,6 +420,23 @@ class Cellcraze_BankSlip {
 		// payment_complete() moves on-hold -> processing (fires the existing IMEI
 		// assignment hook) and records the paid date. Called once (guarded above).
 		$order->payment_complete();
+
+		// Audit (T-102): record only after verification fully succeeds. Keyed on
+		// the order so a retried request can't create a duplicate (verification
+		// is itself once-only via the META_VERIFIED_BY guard). No secrets logged.
+		if ( class_exists( 'Cellcraze_Audit' ) ) {
+			Cellcraze_Audit::log(
+				array(
+					'event_key'   => 'slip_verify:' . (int) $order_id,
+					'event_type'  => 'slip_verify',
+					'object_type' => 'order',
+					'object_id'   => (int) $order_id,
+					'reason'      => 'bank_transfer_verified',
+					'reference'   => $order->get_order_number(),
+					'actor_id'    => $uid,
+				)
+			);
+		}
 
 		$this->redirect_admin_order( $order_id );
 	}

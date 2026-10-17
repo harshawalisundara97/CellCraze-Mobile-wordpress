@@ -1,0 +1,152 @@
+/*
+ * CellCraze — admin design system (back-office screens only).
+ * Loaded only on CellCraze admin pages; never on the storefront (which keeps
+ * its Modernist identity). Admin surfaces may use radii + subtle shadows per
+ * the project UI standards. Scoped under .cc-admin to avoid leaking into core.
+ */
+
+.cc-admin {
+	--cc-accent: #ec3013;
+	--cc-ink: #1f2327;
+	--cc-muted: #646970;
+	--cc-line: #e2e4e7;
+	--cc-surface: #ffffff;
+	--cc-bg: #f6f7f9;
+	--cc-radius: 10px;
+	--cc-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+	color: var(--cc-ink);
+}
+
+/* Page header */
+.cc-admin .cc-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	padding: 4px 0 14px;
+	border-bottom: 2px solid var(--cc-ink);
+	margin: 0 0 18px;
+}
+.cc-admin .cc-head h1 { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2; }
+.cc-admin .cc-head .cc-sub { margin: 2px 0 0; color: var(--cc-muted); font-size: 13px; }
+.cc-admin .cc-head-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Summary stat cards */
+.cc-admin .cc-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+	gap: 12px;
+	margin: 0 0 20px;
+}
+.cc-admin .cc-card {
+	background: var(--cc-surface);
+	border: 1px solid var(--cc-line);
+	border-radius: var(--cc-radius);
+	box-shadow: var(--cc-shadow);
+	padding: 14px 16px;
+}
+.cc-admin .cc-card .cc-card-label { color: var(--cc-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.cc-admin .cc-card .cc-card-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+.cc-admin .cc-card .cc-card-value .cc-sub { font-size: 12px; font-weight: 500; color: var(--cc-muted); }
+.cc-admin .cc-card.cc-accent { border-left: 3px solid var(--cc-accent); }
+.cc-admin .cc-card.cc-pos .cc-card-value { color: #0a7c42; }
+.cc-admin .cc-card.cc-neg .cc-card-value { color: var(--cc-accent); }
+
+/* Filter bar */
+.cc-admin .cc-filters {
+	display: flex;
+	gap: 10px;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	background: var(--cc-surface);
+	border: 1px solid var(--cc-line);
+	border-radius: var(--cc-radius);
+	padding: 12px 14px;
+	margin: 0 0 18px;
+}
+.cc-admin .cc-filters label { display: block; font-size: 11px; font-weight: 600; color: var(--cc-muted); margin-bottom: 3px; }
+.cc-admin .cc-filters input, .cc-admin .cc-filters select { min-height: 32px; }
+
+/* Forms */
+.cc-admin .cc-form {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px 14px;
+	align-items: end;
+	background: var(--cc-surface);
+	border: 1px solid var(--cc-line);
+	border-radius: var(--cc-radius);
+	box-shadow: var(--cc-shadow);
+	padding: 16px;
+	margin: 0 0 22px;
+}
+.cc-admin .cc-form .full { grid-column: 1 / -1; }
+.cc-admin .cc-form label { display: block; font-size: 12px; font-weight: 600; color: var(--cc-muted); margin-bottom: 3px; }
+.cc-admin .cc-form input,
+.cc-admin .cc-form select,
+.cc-admin .cc-form textarea { width: 100%; box-sizing: border-box; }
+@media (max-width: 782px) { .cc-admin .cc-form { grid-template-columns: 1fr; } }
+
+/* Tables */
+.cc-admin table.widefat {
+	border: 1px solid var(--cc-line);
+	border-radius: var(--cc-radius);
+	overflow: hidden;
+	box-shadow: var(--cc-shadow);
+}
+.cc-admin table.widefat thead th { background: var(--cc-bg); font-weight: 600; }
+.cc-admin table.widefat td, .cc-admin table.widefat th { padding: 10px 12px; }
+.cc-admin table.widefat code { background: var(--cc-bg); padding: 1px 6px; border-radius: 5px; }
+
+/* Numeric alignment helper */
+.cc-admin .cc-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Responsive table overflow wrapper */
+.cc-admin .cc-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Status chips (icon-independent: shape + text, never colour alone) */
+.cc-admin .cc-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	padding: 4px 8px;
+	border-radius: 999px;
+	border: 1px solid var(--cc-line);
+	background: var(--cc-bg);
+	color: var(--cc-ink);
+	white-space: nowrap;
+}
+.cc-admin .cc-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cc-muted); }
+.cc-admin .cc-chip.is-ok::before, .cc-admin .cc-chip.is-available::before, .cc-admin .cc-chip.is-active::before { background: #0a7c42; }
+.cc-admin .cc-chip.is-warn::before, .cc-admin .cc-chip.is-reserved::before { background: #b26a00; }
+.cc-admin .cc-chip.is-bad::before, .cc-admin .cc-chip.is-void::before, .cc-admin .cc-chip.is-damaged::before { background: var(--cc-accent); }
+.cc-admin .cc-chip.is-sold::before { background: #2563eb; }
+
+/* Empty state */
+.cc-admin .cc-empty {
+	text-align: center;
+	color: var(--cc-muted);
+	padding: 32px 16px;
+	background: var(--cc-surface);
+	border: 1px dashed var(--cc-line);
+	border-radius: var(--cc-radius);
+}
+
+/* Buttons: keep WP .button, add a subtle transition + focus ring */
+.cc-admin .button { transition: background-color .12s ease, border-color .12s ease, box-shadow .12s ease; }
+.cc-admin .button:focus-visible { outline: 2px solid var(--cc-accent); outline-offset: 1px; box-shadow: none; }
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	.cc-admin .button { transition: none; }
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+	.cc-admin .cc-head { align-items: flex-start; flex-direction: column; }
+	.cc-admin .cc-filters { flex-direction: column; align-items: stretch; }
+}
