@@ -136,6 +136,156 @@ add_action(
 );
 
 /**
+ * Is the current request a CellCraze admin screen (one of our submenu pages)?
+ *
+ * @return bool
+ */
+function cellcraze_is_admin_screen() {
+	if ( ! is_admin() ) {
+		return false;
+	}
+	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	if ( 0 === strpos( $page, 'cellcraze-' ) ) {
+		return true;
+	}
+	if ( function_exists( 'get_current_screen' ) ) {
+		$screen = get_current_screen();
+		if ( $screen && false !== strpos( (string) $screen->id, 'cellcraze-' ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Resolve the source file of a hook callback (plain function, "Class::method"
+ * string, [object|class, method] array, or Closure). Returns '' when it cannot
+ * be determined — in which case the caller preserves the notice.
+ *
+ * @param mixed $callback Hook callback.
+ * @return string Absolute file path, or ''.
+ */
+function cellcraze_callback_source_file( $callback ) {
+	try {
+		if ( $callback instanceof Closure ) {
+			$ref = new ReflectionFunction( $callback );
+		} elseif ( is_string( $callback ) && false !== strpos( $callback, '::' ) ) {
+			list( $class, $method ) = explode( '::', $callback, 2 );
+			$ref = new ReflectionMethod( $class, $method );
+		} elseif ( is_array( $callback ) && isset( $callback[0], $callback[1] ) ) {
+			$target = is_object( $callback[0] ) ? get_class( $callback[0] ) : (string) $callback[0];
+			$ref    = new ReflectionMethod( $target, (string) $callback[1] );
+		} elseif ( is_string( $callback ) && function_exists( $callback ) ) {
+			$ref = new ReflectionFunction( $callback );
+		} else {
+			return '';
+		}
+		return (string) $ref->getFileName();
+	} catch ( \Throwable $e ) {
+		return '';
+	}
+}
+
+/**
+ * Remove, on the given hook, only the callbacks that physically originate from
+ * a specific set of plugin folders. Everything else is preserved — WordPress
+ * core, WooCommerce core, security plugins, any other plugin, and any callback
+ * whose source file cannot be resolved.
+ *
+ * @param string   $hook         'admin_notices' | 'all_admin_notices'.
+ * @param string[] $plugin_slugs Plugin folder names whose notices to suppress.
+ */
+function cellcraze_suppress_plugin_notices( $hook, array $plugin_slugs ) {
+	global $wp_filter;
+	if ( empty( $wp_filter[ $hook ] ) || ! isset( $wp_filter[ $hook ]->callbacks ) ) {
+		return;
+	}
+	$remove = array();
+	foreach ( $wp_filter[ $hook ]->callbacks as $priority => $callbacks ) {
+		foreach ( $callbacks as $cb ) {
+			if ( ! isset( $cb['function'] ) ) {
+				continue;
+			}
+			$file = cellcraze_callback_source_file( $cb['function'] );
+			if ( '' === $file ) {
+				continue; // Unknown source → preserve.
+			}
+			$file = wp_normalize_path( $file );
+			foreach ( $plugin_slugs as $slug ) {
+				if ( false !== strpos( $file, '/plugins/' . $slug . '/' ) ) {
+					$remove[] = array( $priority, $cb['function'] );
+					break;
+				}
+			}
+		}
+	}
+	// Remove after collecting, so we never mutate the arrays we are iterating.
+	foreach ( $remove as $r ) {
+		remove_action( $hook, $r[1], $r[0] );
+	}
+}
+
+/**
+ * Declutter CellCraze workflow screens by suppressing the promotional / setup
+ * notices pushed by specific noisy third-party plugins — ONLY on our own pages.
+ *
+ * Deliberately targeted (not a blanket remove_all_actions): WordPress core,
+ * WooCommerce core, security plugins, and every other source keep their
+ * notices, as do CellCraze's own inline messages (rendered inside each page's
+ * render(), not via these hooks) and PHP fatal/parse errors (printed directly).
+ * Only notices whose callback physically lives in the listed plugin folders are
+ * removed, and only on the seven CellCraze pages.
+ */
+add_action(
+	'in_admin_header',
+	function () {
+		if ( ! cellcraze_is_admin_screen() ) {
+			return;
+		}
+		$noisy = array(
+			'woocommerce-pdf-invoices-packing-slips',
+			'ti-woocommerce-wishlist',
+		);
+		cellcraze_suppress_plugin_notices( 'admin_notices', $noisy );
+		cellcraze_suppress_plugin_notices( 'all_admin_notices', $noisy );
+	},
+	0
+);
+
+/**
+ * Responsive safety net: wrap any CellCraze admin data table that is not
+ * already inside a `.cc-table-wrap` so wide tables scroll within their own
+ * container instead of forcing the whole admin page wide on narrow screens.
+ *
+ * Presentation-only, scoped to CellCraze screens, and progressive: with JS off
+ * the tables render exactly as before. No markup/logic in the render methods is
+ * changed, and tables already wrapped (e.g. the product IMEI tab) are skipped.
+ */
+add_action(
+	'admin_print_footer_scripts',
+	function () {
+		if ( ! cellcraze_is_admin_screen() ) {
+			return;
+		}
+		?>
+		<script>
+		( function () {
+			var tables = document.querySelectorAll( '.cc-admin table.widefat' );
+			for ( var i = 0; i < tables.length; i++ ) {
+				var t = tables[ i ];
+				if ( t.closest && t.closest( '.cc-table-wrap' ) ) { continue; }
+				var wrap = document.createElement( 'div' );
+				wrap.className = 'cc-table-wrap';
+				t.parentNode.insertBefore( wrap, t );
+				wrap.appendChild( t );
+			}
+		} )();
+		</script>
+		<?php
+	}
+);
+
+/**
  * Declare HPOS (custom order tables) compatibility.
  */
 add_action(
