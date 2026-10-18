@@ -38,6 +38,9 @@ if ( $on_sale && $product->get_regular_price() && $product->get_sale_price() ) {
 		<?php if ( $badge ) : ?>
 			<span class="cc-badge"><?php echo esc_html( $badge ); ?></span>
 		<?php endif; ?>
+		<?php if ( function_exists( 'cellcraze_is_new' ) && cellcraze_is_new( $product ) ) : ?>
+			<span class="cc-badge cc-badge-new">New</span>
+		<?php endif; ?>
 		<span class="cc-img-well">
 			<?php echo $product->get_image( 'woocommerce_thumbnail' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 		</span>
