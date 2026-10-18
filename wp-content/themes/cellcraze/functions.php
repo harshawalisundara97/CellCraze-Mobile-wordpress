@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CELLCRAZE_VERSION', '1.1.0' );
+define( 'CELLCRAZE_VERSION', '1.2.1' );
 
 /**
  * Styles: Archivo (Google Fonts) + Modernist tokens + CellCraze layer.
@@ -94,6 +94,22 @@ add_filter( 'body_class', 'cellcraze_body_class' );
 /** Shop grid: 3 columns (design 1b); featured uses 4 via template. */
 add_filter( 'loop_shop_columns', function () { return 3; } );
 add_filter( 'loop_shop_per_page', function () { return 12; } );
+
+/**
+ * Branded, neutral placeholder for products that have no media.
+ *
+ * Display-time only: this swaps the *image source* WooCommerce already renders
+ * for products without a featured image. It does not create attachments, touch
+ * product records, or alter any media — products with real images are
+ * unaffected (this filter only fires when WooCommerce asks for the placeholder).
+ *
+ * @param string $src Current placeholder image URL.
+ * @return string
+ */
+function cellcraze_branded_placeholder_src( $src ) {
+	return get_stylesheet_directory_uri() . '/assets/img/placeholder.svg';
+}
+add_filter( 'woocommerce_placeholder_img_src', 'cellcraze_branded_placeholder_src' );
 
 /**
  * Stock indicator matching the design (square + label).

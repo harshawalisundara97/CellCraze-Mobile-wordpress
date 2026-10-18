@@ -1,0 +1,5 @@
+# Licensed image binaries live here locally but are NOT committed.
+# Track only the README and this ignore file.
+*
+!.gitignore
+!README.md
