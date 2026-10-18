@@ -64,9 +64,12 @@ if ( function_exists( 'cellcraze_opt' ) && cellcraze_opt( 'cc_announce_on' ) && 
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
 				<?php echo is_user_logged_in() ? esc_html( wp_get_current_user()->first_name ?: wp_get_current_user()->display_name ) : 'Sign in'; ?>
 			</a>
-			<a class="btn btn-icon btn-secondary" href="<?php echo esc_url( home_url( '/wishlist/' ) ); ?>" aria-label="Wishlist">
+			<?php $cc_wishlist_url = function_exists( 'cellcraze_wishlist_url' ) ? cellcraze_wishlist_url() : ''; ?>
+			<?php if ( $cc_wishlist_url ) : ?>
+			<a class="btn btn-icon btn-secondary" href="<?php echo esc_url( $cc_wishlist_url ); ?>" aria-label="Wishlist">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
 			</a>
+			<?php endif; ?>
 			<a class="btn btn-primary cc-cart-btn" href="<?php echo esc_url( $cart_url ); ?>">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
 				Cart <span class="cc-cart-count"><?php echo esc_html( $cart_count ); ?></span>
@@ -109,6 +112,7 @@ if ( function_exists( 'cellcraze_opt' ) && cellcraze_opt( 'cc_announce_on' ) && 
 			<a class="cc-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="cc-mark"></span><?php echo esc_html( get_bloginfo( 'name' ) ?: 'CellCraze' ); ?></a>
 			<a class="btn btn-icon btn-primary cc-cart-btn" href="<?php echo esc_url( $cart_url ); ?>" aria-label="Cart">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+				<span class="cc-cart-count cc-cart-count--badge"><?php echo esc_html( $cart_count ); ?></span>
 			</a>
 		</div>
 		<form role="search" method="get" class="cc-mobile-search cc-search" action="<?php echo esc_url( home_url( '/' ) ); ?>">

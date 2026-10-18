@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CELLCRAZE_VERSION', '1.3.2' );
+define( 'CELLCRAZE_VERSION', '1.4.3' );
 
 /**
  * Styles: Archivo (Google Fonts) + Modernist tokens + CellCraze layer.
@@ -47,6 +47,20 @@ function cellcraze_enqueue_styles() {
 		array(),
 		CELLCRAZE_VERSION,
 		true
+	);
+	wp_localize_script(
+		'cellcraze-main',
+		'CellCrazeSearch',
+		array(
+			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			'nonce'   => wp_create_nonce( 'cellcraze_search' ),
+			'home'    => home_url( '/' ),
+			'i18n'    => array(
+				'noResults' => __( 'No products found', 'cellcraze' ),
+				'viewAll'   => __( 'See all results', 'cellcraze' ),
+				'searching' => __( 'Searching…', 'cellcraze' ),
+			),
+		)
 	);
 }
 add_action( 'wp_enqueue_scripts', 'cellcraze_enqueue_styles', 100 );
@@ -271,6 +285,100 @@ function cellcraze_get_sale_products( $limit = 8 ) {
 function cellcraze_deals_url() {
 	$shop = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
 	return add_query_arg( 'on_sale', '1', $shop );
+}
+
+/**
+ * AJAX live-search suggestions. Returns up to 6 real, visible WooCommerce
+ * products matching the term, with accurate name, price (incl. sale), thumbnail
+ * (or branded placeholder) and permalink. Read-only; no data is modified.
+ */
+function cellcraze_search_suggest() {
+	check_ajax_referer( 'cellcraze_search', 'nonce' );
+
+	$term = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+	if ( mb_strlen( $term ) < 2 || ! function_exists( 'wc_get_product' ) ) {
+		wp_send_json( array( 'results' => array() ) );
+	}
+
+	$query = new WP_Query(
+		array(
+			'post_type'           => 'product',
+			'post_status'         => 'publish',
+			'posts_per_page'      => 6,
+			's'                   => $term,
+			'no_found_rows'       => true,
+			'ignore_sticky_posts' => true,
+			'fields'              => 'ids',
+			'tax_query'           => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+				array(
+					'taxonomy' => 'product_visibility',
+					'field'    => 'name',
+					'terms'    => array( 'exclude-from-search' ),
+					'operator' => 'NOT IN',
+				),
+			),
+		)
+	);
+
+	$placeholder = get_stylesheet_directory_uri() . '/assets/img/placeholder.svg';
+	$results     = array();
+	foreach ( $query->posts as $pid ) {
+		$product = wc_get_product( $pid );
+		if ( ! $product || ! $product->is_visible() ) {
+			continue;
+		}
+		$img_id = $product->get_image_id();
+		$results[] = array(
+			'name'  => $product->get_name(),
+			'url'   => get_permalink( $pid ),
+			'price' => $product->get_price_html(),
+			'img'   => $img_id ? wp_get_attachment_image_url( $img_id, 'woocommerce_gallery_thumbnail' ) : $placeholder,
+		);
+	}
+
+	wp_send_json(
+		array(
+			'results' => $results,
+			'viewAll' => add_query_arg(
+				array(
+					's'         => rawurlencode( $term ),
+					'post_type' => 'product',
+				),
+				home_url( '/' )
+			),
+		)
+	);
+}
+add_action( 'wp_ajax_cellcraze_search', 'cellcraze_search_suggest' );
+add_action( 'wp_ajax_nopriv_cellcraze_search', 'cellcraze_search_suggest' );
+
+/**
+ * Expose the themed header cart count as a WooCommerce cart fragment so it
+ * refreshes through WooCommerce's own fragment mechanism (e.g. AJAX add-to-cart
+ * when enabled). Block-cart changes are handled live in cellcraze.js via the
+ * Store API data store. Both update the same .cc-cart-count element.
+ *
+ * @param array $fragments Cart fragments.
+ * @return array
+ */
+function cellcraze_cart_count_fragment( $fragments ) {
+	$count = ( function_exists( 'WC' ) && WC()->cart ) ? WC()->cart->get_cart_contents_count() : 0;
+	// Non-overlapping selectors so the mobile badge keeps its modifier class.
+	$fragments['span.cc-cart-count:not(.cc-cart-count--badge)'] = '<span class="cc-cart-count">' . esc_html( $count ) . '</span>';
+	$fragments['span.cc-cart-count--badge'] = '<span class="cc-cart-count cc-cart-count--badge">' . esc_html( $count ) . '</span>';
+	return $fragments;
+}
+add_filter( 'woocommerce_add_to_cart_fragments', 'cellcraze_cart_count_fragment' );
+
+/** Wishlist page URL if the TI Wishlist plugin + page are configured, else ''. */
+function cellcraze_wishlist_url() {
+	if ( function_exists( 'tinv_url_wishlist_default' ) ) {
+		$url = tinv_url_wishlist_default();
+		if ( $url ) {
+			return $url;
+		}
+	}
+	return '';
 }
 
 /**

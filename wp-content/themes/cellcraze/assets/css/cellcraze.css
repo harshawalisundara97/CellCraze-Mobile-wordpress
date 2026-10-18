@@ -556,3 +556,80 @@ ul.products.cc-grid { display: grid; gap: var(--space-4); background: transparen
 	.woocommerce-account .woocommerce:has(.woocommerce-MyAccount-navigation) { grid-template-columns: 1fr; gap: 20px; }
 	.woocommerce-account .woocommerce-Addresses { grid-template-columns: 1fr; }
 }
+
+/* ============================================================================
+   LIVE SEARCH SUGGESTIONS
+   ========================================================================== */
+.cc-suggest { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 70; background: var(--color-bg); border: 1px solid var(--color-divider); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); overflow: hidden auto; max-height: 72vh; }
+.cc-suggest-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; text-decoration: none; color: var(--color-text); border-bottom: 1px solid var(--color-divider); transition: background-color var(--dur-fast) var(--ease); }
+.cc-suggest-item:hover, .cc-suggest-item.is-active { background: var(--color-surface); }
+.cc-suggest-thumb { width: 44px; height: 44px; flex: none; background: var(--color-surface); border-radius: var(--radius-sm); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.cc-suggest-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.cc-suggest-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cc-suggest-name { font-weight: 600; font-size: 14px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-suggest-price { font-size: 13px; color: var(--color-text-muted); }
+.cc-suggest-price del { opacity: .6; margin-right: 5px; }
+.cc-suggest-price ins { text-decoration: none; color: var(--color-accent); font-weight: 700; }
+.cc-suggest-all { display: block; padding: 11px 14px; text-align: center; font-family: var(--font-heading); font-weight: 600; font-size: 13px; color: var(--color-accent); text-decoration: none; background: var(--color-surface); }
+.cc-suggest-all:hover, .cc-suggest-all.is-active { background: var(--color-surface-2); color: var(--color-accent-700); }
+.cc-suggest-empty { padding: 18px; text-align: center; color: var(--color-text-muted); font-size: 14px; }
+
+/* ============================================================================
+   WISHLIST (TI WooCommerce Wishlist) — match the storefront
+   ========================================================================== */
+.tinv-wishlist { padding: clamp(24px, 4vw, 40px) var(--cc-pad); }
+.tinv-wishlist table.tinvwl-table { width: 100%; border-collapse: collapse; border: 1px solid var(--color-divider); border-radius: var(--radius-lg); overflow: hidden; font-size: 14px; background: var(--color-bg); }
+.tinv-wishlist table.tinvwl-table thead th { background: var(--color-surface); text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-muted); padding: 12px 14px; border: 0; }
+.tinv-wishlist table.tinvwl-table td { padding: 14px; border-top: 1px solid var(--color-divider); vertical-align: middle; }
+.tinv-wishlist .tinvwl-overview .tinvwl-overview-img, .tinv-wishlist td.product-thumbnail img { width: 56px; height: 56px; object-fit: contain; background: var(--color-surface); border-radius: var(--radius-sm); }
+.tinv-wishlist .product-name a, .tinv-wishlist td.product-name a { color: var(--color-text); font-weight: 600; text-decoration: none; }
+.tinv-wishlist .product-name a:hover { color: var(--color-accent); }
+.tinv-wishlist .amount { font-weight: 700; }
+.tinv-wishlist ins .amount { color: var(--color-accent); }
+.tinv-wishlist del .amount { color: var(--color-text-muted); font-weight: 400; }
+.tinv-wishlist .button, .tinv-wishlist button.button, .tinv-wishlist a.button {
+	display: inline-flex; align-items: center; justify-content: center; background: var(--color-accent); color: #fff; border: 0; border-radius: var(--radius-md); font-family: var(--font-heading); font-weight: 600; font-size: 13px; min-height: 40px; padding: 0 16px; cursor: pointer; text-decoration: none; transition: background-color var(--dur-fast) var(--ease); }
+.tinv-wishlist .button:hover { background: var(--color-accent-700); }
+.tinv-wishlist .tinvwl-btn-remove, .tinv-wishlist .product-remove button, .tinv-wishlist .tinv-wishlist-clear { background: transparent; color: var(--color-text-muted); border: 0; cursor: pointer; }
+.tinv-wishlist .tinvwl-btn-remove:hover, .tinv-wishlist .product-remove button:hover { color: var(--color-danger); }
+.tinv-wishlist .tinv-wishlist-clear, .tinv-wishlist .social-buttons, .tinv-wishlist .tinvwl-to-right { margin-top: 16px; }
+.tinv-wishlist .tinv-wraptable { overflow-x: auto; }
+.tinv-wishlist .tinv-wishlist-empty, .tinv-wishlist .wishlist-empty { text-align: center; color: var(--color-text-muted); padding: 40px 16px; background: var(--color-surface); border: 1px dashed var(--color-divider-strong); border-radius: var(--radius-lg); }
+
+/* ============================================================================
+   HEADER CART COUNT — mobile badge (desktop count stays an inline pill)
+   ========================================================================== */
+.cc-cart-btn { position: relative; }
+.cc-cart-count--badge { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; background: #fff; color: var(--color-accent); border-radius: var(--radius-pill); font-size: 11px; font-weight: 800; line-height: 1; box-shadow: var(--shadow-sm); }
+
+/* ============================================================================
+   EMPTY RESULTS STATE (search with no matches / empty category)
+   ========================================================================== */
+.cc-empty-state { max-width: 560px; margin: 0 auto; padding: clamp(40px, 6vw, 72px) var(--cc-pad); text-align: center; }
+.cc-empty-icon { display: inline-flex; width: 72px; height: 72px; align-items: center; justify-content: center; border-radius: 50%; background: var(--color-surface); color: var(--color-text-muted); margin-bottom: 18px; }
+.cc-empty-title { font-size: clamp(22px, 3vw, 28px); margin: 0 0 10px; }
+.cc-empty-text { color: var(--color-text-muted); margin: 0 0 22px; }
+.cc-empty-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.cc-empty-actions .btn-primary { min-height: 46px; padding: 0 22px; }
+.cc-empty-cats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 26px; }
+.cc-empty-cat { font-size: 13px; font-weight: 600; text-decoration: none; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: var(--radius-pill); padding: 7px 14px; transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.cc-empty-cat:hover { background: var(--color-accent-100); color: var(--color-accent-800); border-color: var(--color-accent-200); }
+
+/* ============================================================================
+   ORDER RECEIVED / ORDER DETAILS (thank-you + view-order) — mirrors the
+   account table styling; scoped to .woocommerce-order so it can't affect
+   unrelated pages.
+   ========================================================================== */
+.woocommerce-order { max-width: 920px; margin: 0 auto; padding: clamp(24px, 4vw, 44px) var(--cc-pad); }
+.woocommerce-order .woocommerce-thankyou-order-received, .woocommerce-order > p.woocommerce-notice { font-family: var(--font-heading); font-size: clamp(20px, 3vw, 26px); font-weight: 800; letter-spacing: -0.02em; margin: 0 0 18px; }
+.woocommerce-order ul.woocommerce-order-overview { list-style: none; display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 26px; padding: 0; }
+.woocommerce-order ul.woocommerce-order-overview li { flex: 1 1 150px; background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: var(--radius-md); padding: 12px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--color-text-muted); }
+.woocommerce-order ul.woocommerce-order-overview li strong { display: block; font-size: 15px; text-transform: none; letter-spacing: 0; color: var(--color-text); margin-top: 5px; font-weight: 700; }
+.woocommerce-order table.woocommerce-table--order-details, .woocommerce-order table.shop_table { width: 100%; border-collapse: collapse; border: 1px solid var(--color-divider); border-radius: var(--radius-lg); overflow: hidden; font-size: 14px; background: var(--color-bg); }
+.woocommerce-order table th { background: var(--color-surface); text-align: left; padding: 12px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-muted); }
+.woocommerce-order table td { padding: 12px 14px; border-top: 1px solid var(--color-divider); }
+.woocommerce-order table tfoot th, .woocommerce-order table tfoot td { font-weight: 700; }
+.woocommerce-order .woocommerce-customer-details { margin-top: 26px; }
+.woocommerce-order .woocommerce-customer-details .woocommerce-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.woocommerce-order .woocommerce-customer-details address { font-style: normal; color: var(--color-text-muted); line-height: 1.7; border: 1px solid var(--color-divider); border-radius: var(--radius-lg); padding: 16px; background: var(--color-bg); }
+@media (max-width: 768px) { .woocommerce-order .woocommerce-customer-details .woocommerce-columns { grid-template-columns: 1fr; } }

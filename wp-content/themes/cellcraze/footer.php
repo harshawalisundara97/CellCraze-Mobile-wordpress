@@ -46,6 +46,11 @@ $cc_help_links = array(
 if ( function_exists( 'cellcraze_deals_url' ) ) {
 	$cc_help_links[] = array( __( 'Deals &amp; offers', 'cellcraze' ), cellcraze_deals_url() );
 }
+// Privacy page link only when it is set AND published (empty string otherwise).
+$cc_privacy = function_exists( 'get_privacy_policy_url' ) ? get_privacy_policy_url() : '';
+if ( $cc_privacy ) {
+	$cc_help_links[] = array( __( 'Privacy Policy', 'cellcraze' ), $cc_privacy );
+}
 $cc_help_links[] = array( __( 'Contact us', 'cellcraze' ), 'mailto:' . antispambot( get_option( 'admin_email' ) ) );
 ?>
 </main><!-- .cc-main -->
