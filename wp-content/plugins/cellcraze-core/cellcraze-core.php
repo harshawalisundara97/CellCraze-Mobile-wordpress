@@ -3,7 +3,7 @@
  * Plugin Name:       CellCraze Core
  * Plugin URI:        https://cellcraze.lk
  * Description:       Custom back-office glue for CellCraze: IMEI/serial tracking, order IMEI assignment, and sales-channel (online vs POS) tagging on top of WooCommerce.
- * Version:           1.8.0
+ * Version:           1.9.0
  * Author:            CellCraze
  * Text Domain:       cellcraze-core
  * Requires at least: 6.0
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CELLCRAZE_CORE_VERSION', '1.8.0' );
+define( 'CELLCRAZE_CORE_VERSION', '1.9.0' );
 define( 'CELLCRAZE_CORE_FILE', __FILE__ );
 define( 'CELLCRAZE_CORE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'CELLCRAZE_CORE_URL', plugin_dir_url( __FILE__ ) );

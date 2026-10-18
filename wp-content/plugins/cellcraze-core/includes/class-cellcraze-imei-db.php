@@ -54,6 +54,7 @@ class Cellcraze_IMEI_DB {
 			status VARCHAR(20) NOT NULL DEFAULT 'available',
 			order_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 			po_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			grn_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 			cost DECIMAL(12,2) NOT NULL DEFAULT 0.00,
 			warranty_months SMALLINT(5) UNSIGNED NOT NULL DEFAULT 0,
 			supplier VARCHAR(191) NOT NULL DEFAULT '',
@@ -67,7 +68,8 @@ class Cellcraze_IMEI_DB {
 			KEY product_id (product_id),
 			KEY status (status),
 			KEY order_id (order_id),
-			KEY po_id (po_id)
+			KEY po_id (po_id),
+			KEY grn_id (grn_id)
 		) {$charset_collate};";
 
 		dbDelta( $sql );
@@ -98,6 +100,7 @@ class Cellcraze_IMEI_DB {
 			'status'          => isset( $args['status'] ) ? sanitize_key( $args['status'] ) : self::STATUS_AVAILABLE,
 			'order_id'        => isset( $args['order_id'] ) ? absint( $args['order_id'] ) : 0,
 			'po_id'           => isset( $args['po_id'] ) ? absint( $args['po_id'] ) : 0,
+			'grn_id'          => isset( $args['grn_id'] ) ? absint( $args['grn_id'] ) : 0,
 			'cost'            => isset( $args['cost'] ) ? (float) $args['cost'] : 0,
 			'warranty_months' => isset( $args['warranty_months'] ) ? absint( $args['warranty_months'] ) : 0,
 			'supplier'        => isset( $args['supplier'] ) ? sanitize_text_field( $args['supplier'] ) : '',
@@ -107,7 +110,7 @@ class Cellcraze_IMEI_DB {
 			'updated_at'      => $now,
 		);
 
-		$formats = array( '%s', '%d', '%d', '%s', '%d', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s' );
+		$formats = array( '%s', '%d', '%d', '%s', '%d', '%d', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s' );
 
 		$ok = $wpdb->insert( self::table(), $data, $formats );
 		if ( false === $ok ) {
@@ -128,6 +131,25 @@ class Cellcraze_IMEI_DB {
 		return $wpdb->get_row(
 			$wpdb->prepare( "SELECT * FROM {$table} WHERE imei = %s", $imei ) // phpcs:ignore WordPress.DB
 		);
+	}
+
+	/**
+	 * Count units registered to a specific GRN for a product/variation. Lets a
+	 * receipt reconcile exactly how many units it truly inserted — safe to
+	 * recompute on retry (only this GRN ever sets that grn_id on those rows).
+	 *
+	 * @param int $grn_id       GRN id.
+	 * @param int $product_id   Product id.
+	 * @param int $variation_id Variation id (0 = ignore).
+	 * @return int
+	 */
+	public static function count_units_for_grn( $grn_id, $product_id, $variation_id = 0 ) {
+		global $wpdb;
+		$table = self::table();
+		if ( $variation_id > 0 ) {
+			return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE grn_id = %d AND product_id = %d AND variation_id = %d", absint( $grn_id ), absint( $product_id ), absint( $variation_id ) ) ); // phpcs:ignore WordPress.DB
+		}
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE grn_id = %d AND product_id = %d", absint( $grn_id ), absint( $product_id ) ) ); // phpcs:ignore WordPress.DB
 	}
 
 	/**

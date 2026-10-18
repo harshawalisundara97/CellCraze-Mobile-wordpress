@@ -41,6 +41,10 @@ class Cellcraze_Purchasing {
 	public static function grn_table() {
 		global $wpdb; return $wpdb->prefix . 'cellcraze_grn';
 	}
+	/** @return string */
+	public static function grn_item_table() {
+		global $wpdb; return $wpdb->prefix . 'cellcraze_grn_item';
+	}
 
 	/**
 	 * Create/upgrade tables.
@@ -76,6 +80,7 @@ class Cellcraze_Purchasing {
 			variation_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 			qty_ordered INT(11) NOT NULL DEFAULT 0,
 			qty_received INT(11) NOT NULL DEFAULT 0,
+			received_baseline INT(11) NULL DEFAULT NULL,
 			unit_cost DECIMAL(12,2) NOT NULL DEFAULT 0.00,
 			requires_imei TINYINT(1) NOT NULL DEFAULT 0,
 			warranty_months SMALLINT(5) UNSIGNED NOT NULL DEFAULT 0,
@@ -90,6 +95,7 @@ class Cellcraze_Purchasing {
 			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 			po_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 			grn_token VARCHAR(64) NOT NULL DEFAULT '',
+			state VARCHAR(20) NOT NULL DEFAULT 'pending',
 			received_by BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 			note VARCHAR(500) NOT NULL DEFAULT '',
 			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
@@ -98,6 +104,37 @@ class Cellcraze_Purchasing {
 			KEY po_id (po_id)
 		) {$cc};"
 		);
+		$gi = self::grn_item_table();
+		dbDelta(
+			"CREATE TABLE {$gi} (
+			id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			grn_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			po_item_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			product_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			variation_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			requires_imei TINYINT(1) NOT NULL DEFAULT 0,
+			qty_claimed INT(11) NOT NULL DEFAULT 0,
+			units_registered INT(11) NOT NULL DEFAULT 0,
+			stock_qty INT(11) NOT NULL DEFAULT 0,
+			stock_state VARCHAR(20) NOT NULL DEFAULT 'pending',
+			submitted_serials MEDIUMTEXT NULL,
+			resolution_decision VARCHAR(20) NOT NULL DEFAULT '',
+			resolved_by BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			resolved_at DATETIME NULL,
+			created_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+			updated_at DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',
+			PRIMARY KEY  (id),
+			UNIQUE KEY grn_line (grn_id, po_item_id),
+			KEY grn_id (grn_id),
+			KEY po_item_id (po_item_id)
+		) ENGINE=InnoDB {$cc};"
+		);
+
+		// One-time, NULL-guarded, interruption-safe baseline freeze: each
+		// pre-existing PO line's stored qty_received becomes its immutable
+		// received_baseline exactly once. New lines are inserted with 0, so
+		// they are never NULL and never re-baselined.
+		$wpdb->query( "UPDATE {$it} SET received_baseline = qty_received WHERE received_baseline IS NULL" ); // phpcs:ignore WordPress.DB
 	}
 
 	/**
@@ -226,9 +263,10 @@ class Cellcraze_Purchasing {
 				'po_id'           => $po_id,
 				'product_id'      => $product->is_type( 'variation' ) ? $product->get_parent_id() : $product->get_id(),
 				'variation_id'    => $product->is_type( 'variation' ) ? $product->get_id() : 0,
-				'qty_ordered'     => $qty,
-				'qty_received'    => 0,
-				'unit_cost'       => $cost,
+				'qty_ordered'       => $qty,
+				'qty_received'      => 0,
+				'received_baseline' => 0,
+				'unit_cost'         => $cost,
 				'requires_imei'   => ( isset( $_POST['requires_imei'] ) && '1' === $_POST['requires_imei'] ) ? 1 : 0,
 				'warranty_months' => isset( $_POST['warranty_months'] ) ? absint( $_POST['warranty_months'] ) : 0,
 			)
