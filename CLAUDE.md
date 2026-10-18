@@ -68,12 +68,21 @@ Keys: `[x]` done · `[~]` in progress · `[ ]` todo. Keep this updated as work p
 
 ## Conventions
 
-**Design system (Modernist) — follow everywhere on the storefront:**
-- Zero border radius. Strong **2px** section rules; 1px row rules.
-- Visible grids via `display:grid; gap:2px; background:var(--color-divider)` (the gap is the line).
-- Flush-left everything (incl. button labels; wide buttons = label left / icon right).
-- One accent (red `#ec3013`), used sparingly. Photography is grayscale.
-- Single typeface **Archivo** (400/600/800). Tokens: `assets/css/tokens.css`.
+**Design system (White / Premium) — follow everywhere on the storefront:**
+_(This replaced the earlier "Modernist" direction on 2026-10-18 by owner decision —
+a full pivot to a white, premium, Apple-store-calm + modern-SaaS look.)_
+- White (`#ffffff`) and soft off-white (`#f6f7f9`) surfaces; charcoal ink (`#1d1d1f`),
+  muted grey secondary (`#6e6e73`); hairline grey borders (`#e6e8eb`).
+- Soft radii (`--radius-sm 8 / --radius-md 12 / --radius-lg 18`, pill for chips);
+  subtle, cool, low-contrast shadows; real colour product photography (no grayscale).
+- One restrained accent — **premium blue `#0071e3`** — for primary actions & key status,
+  plus semantic success/warning/danger. Generous whitespace, clear hierarchy.
+- Selective glassmorphism (translucent white + blur + fine border) is allowed on the
+  storefront too now — sticky header, overlays — but never at the cost of readability,
+  and never on every card. Provide an opaque `@supports` fallback.
+- Single typeface **Archivo** (400/500/600/700/800). Tokens: `assets/css/tokens.css`
+  (source of truth) → `assets/css/cellcraze.css` (screens). Keep class names stable so
+  WooCommerce hooks/templates keep working; change the visual language, not the markup.
 
 **Code vs. data:**
 - Git tracks **code only** — the `cellcraze` theme, scripts, docs. It does **not** track the
@@ -100,15 +109,16 @@ customer storefront, account, and the admin / POS / inventory / IMEI / purchasin
 delivery / reports screens **we control**. Backend-only tasks must leave the UI untouched.
 
 **Precedence (read this first):**
-1. The existing **"Modernist" design system** (`assets/css/tokens.css`,
-   `assets/css/cellcraze.css`) is the source of truth for the **customer storefront**. Its brand
-   rules win there: **zero border radius, 2px section rules, one red accent `#ec3013`, Archivo,
-   grayscale photography, no glassmorphism.** Do **not** introduce rounded corners or glass on the
-   storefront — it would break brand consistency.
+1. The **"White / Premium" design system** (`assets/css/tokens.css` = source of truth,
+   `assets/css/cellcraze.css` = storefront screens, `cellcraze-core/assets/css/cc-admin.css`
+   = admin) governs **all** surfaces — customer storefront *and* admin/POS/dashboard. Its rules:
+   **white/off-white surfaces, charcoal ink, one blue accent `#0071e3` + semantic statuses,
+   soft radii, hairline borders, subtle shadows, real colour photography, Archivo.** Rounded
+   corners and *selective* glassmorphism are now allowed on the storefront too (header/overlays),
+   with opaque fallbacks and never at the cost of readability.
 2. The standards below set the **universal quality bar** (hierarchy, spacing, accessibility,
-   responsive, states) and additionally govern **admin/POS/dashboard surfaces we build**, which
-   have no Modernist handoff. Corner radii and *selective* glassmorphism are allowed **only** on
-   those admin/POS/dashboard surfaces, never on the storefront.
+   responsive, states) across every surface. Keep storefront **class names** stable so
+   WooCommerce hooks/templates keep working — restyle, don't restructure markup.
 3. Functional correctness, accessibility, readability, security and business usability **always**
    outrank visual decoration.
 

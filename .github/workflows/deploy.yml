@@ -91,14 +91,20 @@ jobs:
       - name: Configure SSH
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # Pin the host key from a pre-verified secret — no trust-on-first-use.
+          # Fail closed if the secret is missing so a MITM key is never trusted.
+          if [ -z "${SSH_KNOWN_HOSTS:-}" ]; then
+            echo "::error::SSH_KNOWN_HOSTS secret is empty. Add the independently verified host key (see docs/DEPLOYMENT.md)."
+            exit 1
+          fi
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Rsync to server
         env:
@@ -112,12 +118,36 @@ jobs:
             [ -z "$p" ] && continue
             echo "Deploying $p"
             # --delete is scoped to this one theme/plugin folder only.
-            rsync -az --delete \
+            # Shared-hosting-safe flags: no owner/group/perm preservation
+            # (cannot chown as a normal cPanel user), keep symlinks/times.
+            rsync -rlptzv --omit-dir-times --no-perms --no-owner --no-group --delete \
               --exclude '.git*' --exclude 'node_modules/' --exclude '.github/' \
               --exclude 'tests/' --exclude '.env*' --exclude '*.log' \
               -e "$SSH" \
               "$p/" "$SSH_USER@$SSH_HOST:$REMOTE_WP_ROOT/$p/"
           done <<< "$DEPLOY_PATHS"
+
+      - name: Verify deployment
+        run: |
+          set -euo pipefail
+          url="https://phoneshop.nuvirahub.com/"
+          echo "Verifying $url"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 5 --max-time 30 "$url" || echo "000")
+          echo "HTTP $code"
+          case "$code" in
+            200|301|302)
+              echo "### ✅ Deployed and reachable — phoneshop.nuvirahub.com (HTTP $code)" >> "$GITHUB_STEP_SUMMARY" ;;
+            *)
+              echo "::error::Production health check failed (HTTP $code)"
+              echo "### ❌ Deploy ran but site returned HTTP $code" >> "$GITHUB_STEP_SUMMARY"
+              exit 1 ;;
+          esac
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error::Deployment to phoneshop.nuvirahub.com failed. Check the job log above."
+          echo "### ❌ Deployment failed — see the failing step. Production was NOT verified." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Cleanup key
         if: always()

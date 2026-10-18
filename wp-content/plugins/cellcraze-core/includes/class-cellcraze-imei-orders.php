@@ -78,21 +78,50 @@ class Cellcraze_IMEI_Orders {
 			$qty        = (int) $item->get_quantity();
 
 			// How many units already tied to this exact line item?
-			$assigned_meta = (array) $item->get_meta( '_cellcraze_imeis', true );
+			// Normalize: an unset meta is '' which (array) casts to [""] — a
+			// phantom element that would under-count what is needed.
+			$assigned_meta = $item->get_meta( '_cellcraze_imeis', true );
+			$assigned_meta = is_array( $assigned_meta ) ? array_values( array_filter( $assigned_meta, 'strlen' ) ) : array();
 			$need          = $qty - count( $assigned_meta );
 			if ( $need <= 0 ) {
 				continue;
 			}
 
-			$units = Cellcraze_IMEI_DB::get_available( $product_id, 0, $need );
-			if ( empty( $units ) ) {
+			// Fetch more candidates than strictly needed so that if a unit is
+			// claimed by a concurrent sale (compare-and-set fails) we can fall
+			// through to the next available one instead of under-assigning.
+			$pool = Cellcraze_IMEI_DB::get_available( $product_id, 0, max( $need + 5, $need * 2 ) );
+			if ( empty( $pool ) ) {
 				continue;
 			}
 
-			$imeis = $assigned_meta;
-			foreach ( $units as $unit ) {
+			$imeis   = $assigned_meta;
+			$claimed = 0;
+			foreach ( $pool as $unit ) {
+				if ( $claimed >= $need ) {
+					break;
+				}
+				// Atomic claim — only succeeds if the unit is still available.
 				if ( Cellcraze_IMEI_DB::mark_sold( $unit->id, $order_id ) ) {
 					$imeis[] = $unit->imei;
+					$claimed++;
+					// Assignment epoch disambiguates distinct lifecycles of the
+					// same unit+order while staying stable across retries of a
+					// single transition (idempotent). qty_delta null — the qty
+					// movement is recorded via woocommerce_reduce_order_stock.
+					$fresh = Cellcraze_IMEI_DB::get( $unit->id );
+					$epoch = preg_replace( '/[^0-9]/', '', $fresh ? (string) $fresh->sold_at : '' );
+					Cellcraze_Audit::log(
+						array(
+							'event_key'   => 'imei_assign:' . (int) $unit->id . ':' . (int) $order_id . ':' . $epoch,
+							'event_type'  => 'imei_assign',
+							'object_type' => 'imei_unit',
+							'object_id'   => (int) $unit->id,
+							'product_id'  => (int) $product_id,
+							'reason'      => 'order_fulfilment',
+							'reference'   => $order->get_order_number(),
+						)
+					);
 				}
 			}
 
@@ -131,6 +160,23 @@ class Cellcraze_IMEI_Orders {
 		foreach ( $units as $unit ) {
 			if ( Cellcraze_IMEI_DB::restore( $unit->id ) ) {
 				$count++;
+				// Key off the assignment epoch (sold_at of the row being
+				// restored) so a later, legitimately-repeated restore of the
+				// same unit+order is NOT suppressed, while a retried hook in the
+				// same transition stays idempotent. qty movement recorded via
+				// woocommerce_restore_order_stock separately.
+				$epoch = preg_replace( '/[^0-9]/', '', isset( $unit->sold_at ) ? (string) $unit->sold_at : '' );
+				Cellcraze_Audit::log(
+					array(
+						'event_key'   => 'imei_restore:' . (int) $unit->id . ':' . (int) $order_id . ':' . $epoch,
+						'event_type'  => 'imei_restore',
+						'object_type' => 'imei_unit',
+						'object_id'   => (int) $unit->id,
+						'product_id'  => (int) $unit->product_id,
+						'reason'      => 'order_cancel_or_refund',
+						'reference'   => (string) $order_id,
+					)
+				);
 			}
 		}
 

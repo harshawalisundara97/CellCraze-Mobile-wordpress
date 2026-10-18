@@ -52,10 +52,12 @@ get_header( 'shop' );
 						);
 						?>
 					</ul>
-					<p class="cc-muted" style="font-size:12px;margin-top:12px;">
-						Tip: add WooCommerce &ldquo;Filter by price / attribute / stock&rdquo; blocks to the
-						<em>Shop Filters</em> widget area for brand, price and storage filters.
-					</p>
+					<?php if ( current_user_can( 'manage_woocommerce' ) ) : ?>
+						<p class="cc-muted" style="font-size:12px;margin-top:12px;">
+							Tip (only you see this): add WooCommerce &ldquo;Filter by price / attribute / stock&rdquo;
+							blocks to the <em>Shop Filters</em> widget area for brand, price and storage filters.
+						</p>
+					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 		</aside>

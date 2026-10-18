@@ -53,6 +53,7 @@ class Cellcraze_IMEI_DB {
 			variation_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 			status VARCHAR(20) NOT NULL DEFAULT 'available',
 			order_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+			po_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 			cost DECIMAL(12,2) NOT NULL DEFAULT 0.00,
 			warranty_months SMALLINT(5) UNSIGNED NOT NULL DEFAULT 0,
 			supplier VARCHAR(191) NOT NULL DEFAULT '',
@@ -65,7 +66,8 @@ class Cellcraze_IMEI_DB {
 			UNIQUE KEY imei (imei),
 			KEY product_id (product_id),
 			KEY status (status),
-			KEY order_id (order_id)
+			KEY order_id (order_id),
+			KEY po_id (po_id)
 		) {$charset_collate};";
 
 		dbDelta( $sql );
@@ -95,6 +97,7 @@ class Cellcraze_IMEI_DB {
 			'variation_id'    => isset( $args['variation_id'] ) ? absint( $args['variation_id'] ) : 0,
 			'status'          => isset( $args['status'] ) ? sanitize_key( $args['status'] ) : self::STATUS_AVAILABLE,
 			'order_id'        => isset( $args['order_id'] ) ? absint( $args['order_id'] ) : 0,
+			'po_id'           => isset( $args['po_id'] ) ? absint( $args['po_id'] ) : 0,
 			'cost'            => isset( $args['cost'] ) ? (float) $args['cost'] : 0,
 			'warranty_months' => isset( $args['warranty_months'] ) ? absint( $args['warranty_months'] ) : 0,
 			'supplier'        => isset( $args['supplier'] ) ? sanitize_text_field( $args['supplier'] ) : '',
@@ -104,7 +107,7 @@ class Cellcraze_IMEI_DB {
 			'updated_at'      => $now,
 		);
 
-		$formats = array( '%s', '%d', '%d', '%s', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s' );
+		$formats = array( '%s', '%d', '%d', '%s', '%d', '%d', '%f', '%d', '%s', '%s', '%s', '%s', '%s' );
 
 		$ok = $wpdb->insert( self::table(), $data, $formats );
 		if ( false === $ok ) {
@@ -205,6 +208,28 @@ class Cellcraze_IMEI_DB {
 	}
 
 	/**
+	 * Sum the purchase cost of units still SOLD to an order for a product.
+	 * Used for live serialized COGS: a restocked (restored) unit leaves
+	 * status='sold', so its cost drops out automatically — no manual reversal.
+	 *
+	 * @param int $order_id   Order id.
+	 * @param int $product_id Parent product id.
+	 * @return float
+	 */
+	public static function sold_cost_for_order_product( $order_id, $product_id ) {
+		global $wpdb;
+		$table = self::table();
+		return (float) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COALESCE(SUM(cost),0) FROM {$table} WHERE order_id = %d AND product_id = %d AND status = %s", // phpcs:ignore WordPress.DB
+				absint( $order_id ),
+				absint( $product_id ),
+				self::STATUS_SOLD
+			)
+		);
+	}
+
+	/**
 	 * Update arbitrary fields on a unit by id.
 	 *
 	 * @param int   $id   Row id.
@@ -219,21 +244,36 @@ class Cellcraze_IMEI_DB {
 	}
 
 	/**
-	 * Mark a unit sold against an order.
+	 * Atomically claim a unit for an order (compare-and-set).
+	 *
+	 * The UPDATE only succeeds when the row is still `available`, so two
+	 * concurrent sales (e.g. web + POS) can never both claim the same unit:
+	 * exactly one UPDATE affects the row, the other affects zero rows. This is
+	 * the guard against IMEI double-allocation (audit issue CC-03).
 	 *
 	 * @param int $id       Row id.
 	 * @param int $order_id Order id.
-	 * @return bool
+	 * @return bool True only if THIS call transitioned the unit to sold.
 	 */
 	public static function mark_sold( $id, $order_id ) {
-		return self::update(
-			$id,
-			array(
-				'status'   => self::STATUS_SOLD,
-				'order_id' => absint( $order_id ),
-				'sold_at'  => current_time( 'mysql' ),
+		global $wpdb;
+		$table = self::table();
+		$now   = current_time( 'mysql' );
+
+		// wpdb->query returns the number of rows changed for an UPDATE.
+		$affected = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$table} SET status = %s, order_id = %d, sold_at = %s, updated_at = %s WHERE id = %d AND status = %s", // phpcs:ignore WordPress.DB
+				self::STATUS_SOLD,
+				absint( $order_id ),
+				$now,
+				$now,
+				absint( $id ),
+				self::STATUS_AVAILABLE
 			)
 		);
+
+		return ( 1 === (int) $affected );
 	}
 
 	/**

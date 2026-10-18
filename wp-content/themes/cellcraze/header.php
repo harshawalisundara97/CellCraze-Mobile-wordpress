@@ -25,6 +25,16 @@ $shop_url   = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
+<?php
+$cc_announce = function_exists( 'cellcraze_opt' ) ? cellcraze_opt( 'cc_announce_text' ) : '';
+if ( function_exists( 'cellcraze_opt' ) && cellcraze_opt( 'cc_announce_on' ) && '' !== trim( (string) $cc_announce ) ) :
+	?>
+	<div class="cc-announce" role="region" aria-label="<?php esc_attr_e( 'Store announcement', 'cellcraze' ); ?>">
+		<span class="cc-announce-text"><?php echo esc_html( $cc_announce ); ?></span>
+		<button type="button" class="cc-announce-close" aria-label="<?php esc_attr_e( 'Dismiss announcement', 'cellcraze' ); ?>">&times;</button>
+	</div>
+<?php endif; ?>
+
 <header class="cc-site-header">
 
 	<!-- Utility bar -->

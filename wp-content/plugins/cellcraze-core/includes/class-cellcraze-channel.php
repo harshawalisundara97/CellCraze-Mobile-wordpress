@@ -52,6 +52,15 @@ class Cellcraze_Channel {
 	 */
 	public static function set( $order, $channel ) {
 		$channel = in_array( $channel, array( 'online', 'pos' ), true ) ? $channel : 'online';
+		// Re-fetch a FRESH instance before writing. An explicit set() often runs
+		// right after order creation, where `maybe_tag_default` (on
+		// woocommerce_new_order) may have written 'online' via a different
+		// instance; saving a stale object would lose this write. A fresh load
+		// guarantees set() writes against current state and wins.
+		$order = $order instanceof WC_Order ? wc_get_order( $order->get_id() ) : wc_get_order( $order );
+		if ( ! $order ) {
+			return;
+		}
 		$order->update_meta_data( self::META_KEY, $channel );
 		$order->save();
 	}

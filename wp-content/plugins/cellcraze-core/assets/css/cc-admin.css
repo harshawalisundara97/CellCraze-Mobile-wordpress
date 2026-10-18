@@ -1,0 +1,200 @@
+/*
+ * CellCraze — admin design system (back-office screens only).
+ * Loaded only on CellCraze admin pages. White / premium direction to match the
+ * storefront redesign: soft radii, hairline borders, restrained glass on stat
+ * cards + filter bars, subtle shadows, one blue accent + semantic statuses.
+ * Scoped under .cc-admin so nothing leaks into core wp-admin or other plugins.
+ */
+
+.cc-admin {
+	--cc-accent: #0071e3;
+	--cc-accent-ink: #005bb8;
+	--cc-ink: #1d1d1f;
+	--cc-muted: #6e6e73;
+	--cc-line: #e6e8eb;
+	--cc-line-strong: #d3d6db;
+	--cc-surface: #ffffff;
+	--cc-bg: #f6f7f9;
+	--cc-pos: #1a8a52;
+	--cc-warn: #b26a00;
+	--cc-neg: #d7342b;
+	--cc-sold: #0071e3;
+	--cc-radius: 12px;
+	--cc-radius-sm: 8px;
+	--cc-shadow: 0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.07);
+	--cc-shadow-md: 0 4px 14px rgba(16,24,40,.08), 0 2px 5px rgba(16,24,40,.05);
+	--cc-glass: rgba(255,255,255,.72);
+	--cc-glass-border: rgba(255,255,255,.6);
+	--cc-ease: cubic-bezier(.4,0,.2,1);
+	color: var(--cc-ink);
+}
+
+/* Page header */
+.cc-admin .cc-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	padding: 4px 0 14px;
+	border-bottom: 2px solid var(--cc-ink);
+	margin: 0 0 20px;
+}
+.cc-admin .cc-head h1 { margin: 0; font-size: 23px; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
+.cc-admin .cc-head .cc-sub { margin: 3px 0 0; color: var(--cc-muted); font-size: 13px; }
+.cc-admin .cc-head-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* Summary stat cards — restrained glass */
+.cc-admin .cc-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 14px;
+	margin: 0 0 22px;
+}
+.cc-admin .cc-card {
+	position: relative;
+	background: var(--cc-glass);
+	-webkit-backdrop-filter: blur(12px);
+	backdrop-filter: blur(12px);
+	border: 1px solid var(--cc-glass-border);
+	box-shadow: var(--cc-shadow);
+	border-radius: var(--cc-radius);
+	padding: 16px 18px;
+	transition: box-shadow var(--cc-dur, .2s) var(--cc-ease), transform .2s var(--cc-ease);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	.cc-admin .cc-card { background: var(--cc-surface); border-color: var(--cc-line); }
+}
+.cc-admin .cc-card:hover { box-shadow: var(--cc-shadow-md); transform: translateY(-2px); }
+.cc-admin .cc-card .cc-card-label { color: var(--cc-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.cc-admin .cc-card .cc-card-value { font-size: 24px; font-weight: 800; margin-top: 6px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.cc-admin .cc-card .cc-card-value .cc-sub { font-size: 12px; font-weight: 500; color: var(--cc-muted); }
+.cc-admin .cc-card.cc-accent { border-left: 3px solid var(--cc-accent); }
+.cc-admin .cc-card.cc-pos .cc-card-value { color: var(--cc-pos); }
+.cc-admin .cc-card.cc-neg .cc-card-value { color: var(--cc-neg); }
+
+/* Filter bar — light glass */
+.cc-admin .cc-filters {
+	display: flex;
+	gap: 12px;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	background: var(--cc-glass);
+	-webkit-backdrop-filter: blur(12px);
+	backdrop-filter: blur(12px);
+	border: 1px solid var(--cc-glass-border);
+	box-shadow: var(--cc-shadow);
+	border-radius: var(--cc-radius);
+	padding: 14px 16px;
+	margin: 0 0 18px;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	.cc-admin .cc-filters { background: var(--cc-surface); border-color: var(--cc-line); }
+}
+.cc-admin .cc-filters label { display: block; font-size: 11px; font-weight: 600; color: var(--cc-muted); margin-bottom: 4px; }
+.cc-admin .cc-filters input, .cc-admin .cc-filters select { min-height: 34px; }
+
+/* Inputs: soft radius + blue focus ring, scoped to CellCraze screens */
+.cc-admin input[type="text"], .cc-admin input[type="search"], .cc-admin input[type="number"],
+.cc-admin input[type="date"], .cc-admin input[type="email"], .cc-admin input[type="url"],
+.cc-admin select, .cc-admin textarea {
+	border-radius: var(--cc-radius-sm);
+	border: 1px solid var(--cc-line-strong);
+	transition: border-color .14s var(--cc-ease), box-shadow .14s var(--cc-ease);
+}
+.cc-admin input:focus, .cc-admin select:focus, .cc-admin textarea:focus {
+	border-color: var(--cc-accent);
+	box-shadow: 0 0 0 3px rgba(0,113,227,.15);
+	outline: none;
+}
+
+/* Forms */
+.cc-admin .cc-form {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px 16px;
+	align-items: end;
+	background: var(--cc-surface);
+	border: 1px solid var(--cc-line);
+	border-radius: var(--cc-radius);
+	box-shadow: var(--cc-shadow);
+	padding: 18px;
+	margin: 0 0 22px;
+}
+.cc-admin .cc-form .full { grid-column: 1 / -1; }
+.cc-admin .cc-form label { display: block; font-size: 12px; font-weight: 600; color: var(--cc-muted); margin-bottom: 4px; }
+.cc-admin .cc-form input,
+.cc-admin .cc-form select,
+.cc-admin .cc-form textarea { width: 100%; box-sizing: border-box; }
+@media (max-width: 782px) { .cc-admin .cc-form { grid-template-columns: 1fr; } }
+
+/* Tables */
+.cc-admin table.widefat {
+	border: 1px solid var(--cc-line);
+	border-radius: var(--cc-radius);
+	overflow: hidden;
+	box-shadow: var(--cc-shadow);
+}
+.cc-admin table.widefat thead th { background: var(--cc-bg); font-weight: 700; color: var(--cc-ink); border-bottom: 1px solid var(--cc-line-strong); }
+.cc-admin table.widefat td, .cc-admin table.widefat th { padding: 11px 13px; }
+.cc-admin table.widefat tbody tr { transition: background-color .12s var(--cc-ease); }
+.cc-admin table.widefat tbody tr:hover { background: var(--cc-bg); }
+.cc-admin table.widefat code { background: var(--cc-bg); padding: 2px 7px; border-radius: 6px; font-size: 12px; }
+
+/* Numeric alignment helper */
+.cc-admin .cc-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Responsive table overflow wrapper */
+.cc-admin .cc-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--cc-radius); }
+
+/* Status chips (icon-independent: dot + text, never colour alone) */
+.cc-admin .cc-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	padding: 5px 10px;
+	border-radius: 999px;
+	border: 1px solid var(--cc-line);
+	background: var(--cc-bg);
+	color: var(--cc-ink);
+	white-space: nowrap;
+}
+.cc-admin .cc-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cc-muted); }
+.cc-admin .cc-chip.is-ok::before, .cc-admin .cc-chip.is-available::before, .cc-admin .cc-chip.is-active::before { background: var(--cc-pos); }
+.cc-admin .cc-chip.is-warn::before, .cc-admin .cc-chip.is-reserved::before { background: var(--cc-warn); }
+.cc-admin .cc-chip.is-bad::before, .cc-admin .cc-chip.is-void::before, .cc-admin .cc-chip.is-damaged::before { background: var(--cc-neg); }
+.cc-admin .cc-chip.is-sold::before { background: var(--cc-sold); }
+
+/* Empty state */
+.cc-admin .cc-empty {
+	text-align: center;
+	color: var(--cc-muted);
+	padding: 40px 16px;
+	background: var(--cc-surface);
+	border: 1px dashed var(--cc-line-strong);
+	border-radius: var(--cc-radius);
+}
+
+/* Primary action buttons on CellCraze screens → blue accent */
+.cc-admin .button-primary {
+	background: var(--cc-accent);
+	border-color: var(--cc-accent);
+	box-shadow: 0 1px 2px rgba(0,113,227,.25);
+}
+.cc-admin .button-primary:hover { background: var(--cc-accent-ink); border-color: var(--cc-accent-ink); }
+.cc-admin .button { border-radius: var(--cc-radius-sm); transition: background-color .12s var(--cc-ease), border-color .12s var(--cc-ease), box-shadow .12s var(--cc-ease); }
+.cc-admin .button:focus-visible { outline: 2px solid var(--cc-accent); outline-offset: 1px; box-shadow: none; }
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	.cc-admin * { transition: none !important; }
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+	.cc-admin .cc-head { align-items: flex-start; flex-direction: column; }
+	.cc-admin .cc-filters { flex-direction: column; align-items: stretch; }
+}
