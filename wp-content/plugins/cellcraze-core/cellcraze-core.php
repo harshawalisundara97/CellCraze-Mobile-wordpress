@@ -42,6 +42,33 @@ require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-suppliers.php';
 require_once CELLCRAZE_CORE_PATH . 'includes/class-cellcraze-purchasing.php';
 
 /**
+ * Block script execution across the whole uploads/ directory (defense in depth
+ * against PHP web-shells uploaded through any plugin). The private slips dir is
+ * already hardened + gated; this protects the general media directory too.
+ *
+ * Apache-only (.htaccess). On Nginx the host must add the equivalent `location`
+ * rule; uploaded files there are still non-executable unless PHP is wired to the
+ * uploads path, which it should never be. Existing .htaccess is left untouched
+ * so host/security-plugin rules are never clobbered.
+ */
+function cellcraze_core_harden_uploads() {
+	$uploads = wp_upload_dir();
+	if ( empty( $uploads['basedir'] ) || ! is_dir( $uploads['basedir'] ) ) {
+		return;
+	}
+	$ht = trailingslashit( $uploads['basedir'] ) . '.htaccess';
+	if ( file_exists( $ht ) ) {
+		return; // Never overwrite an existing policy.
+	}
+	$rules  = "# Added by CellCraze Core: deny execution of scripts in uploads (defense in depth).\n";
+	$rules .= "<FilesMatch \"\\.(?:php|php3|php4|php5|php7|php8|phtml|pht|phar|cgi|pl|py|asp|aspx|sh)$\">\n";
+	$rules .= "\tRequire all denied\n";
+	$rules .= "\t<IfModule !mod_authz_core.c>\n\t\tDeny from all\n\t</IfModule>\n";
+	$rules .= "</FilesMatch>\n";
+	@file_put_contents( $ht, $rules ); // phpcs:ignore WordPress.WP.AlternativeFunctions
+}
+
+/**
  * Activation: create / upgrade the IMEI table + install staff roles.
  */
 function cellcraze_core_activate() {
@@ -52,6 +79,7 @@ function cellcraze_core_activate() {
 	Cellcraze_Purchasing::install();
 	Cellcraze_Roles::install();
 	Cellcraze_BankSlip::private_dir(); // create + harden the private slips dir.
+	cellcraze_core_harden_uploads();   // block PHP execution in uploads/ (defense in depth).
 	add_option( 'cellcraze_core_version', CELLCRAZE_CORE_VERSION );
 }
 register_activation_hook( __FILE__, 'cellcraze_core_activate' );

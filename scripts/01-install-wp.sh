@@ -19,6 +19,12 @@ fi
 wp option update siteurl "$SITE_URL"
 wp option update home "$SITE_URL"
 
+# Security hardening: disable the dashboard theme/plugin file editor so a stolen
+# admin session cannot paste a PHP web-shell through Appearance/Plugins -> Editor.
+wp config set DISALLOW_FILE_EDIT true --raw --type=constant 2>/dev/null \
+  && echo "    Hardened: file editor disabled (DISALLOW_FILE_EDIT)." \
+  || echo "    Note: could not set DISALLOW_FILE_EDIT (set it in wp-config.php manually)."
+
 # Storefront is the free, WooCommerce-native parent theme for our child theme.
 if ! wp theme is-installed storefront 2>/dev/null; then
   wp theme install storefront
