@@ -42,8 +42,10 @@ h1, h2, h3, h4 { margin: 0 0 8px; line-height: 1.14; }
 /* ============================================================================
    HEADER (shared) — sticky translucent glass
    ========================================================================== */
-.cc-site-header { position: sticky; top: 0; z-index: 50; background: var(--glass-bg); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); border-bottom: 1px solid var(--color-divider); }
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .cc-site-header { background: var(--color-bg); } }
+.cc-site-header { position: sticky; top: 0; z-index: 50; background: var(--glass-bg); -webkit-backdrop-filter: blur(var(--glass-blur)); backdrop-filter: blur(var(--glass-blur)); border-bottom: 1px solid var(--color-divider); transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+/* Liquid Glass: strengthen the frost + add a soft lift + edge highlight once scrolled. */
+.cc-site-header.is-scrolled { background: var(--glass-bg-strong); -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(1.4); backdrop-filter: blur(var(--blur-lg)) saturate(1.4); border-bottom-color: transparent; box-shadow: 0 6px 24px rgba(16,24,40,.10), inset 0 1px 0 var(--glass-border); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .cc-site-header, .cc-site-header.is-scrolled { background: var(--color-bg); } }
 
 .cc-utility { background: var(--color-surface); color: var(--color-text-muted); font-size: 12px; border-bottom: 1px solid var(--color-divider); }
 .cc-utility .cc-util-inner { display: flex; gap: 28px; align-items: center; padding: 8px var(--cc-pad); }
@@ -74,13 +76,21 @@ h1, h2, h3, h4 { margin: 0 0 8px; line-height: 1.14; }
 /* ============================================================================
    HOMEPAGE (1a)
    ========================================================================== */
-.cc-hero { display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: var(--space-8); padding: clamp(40px, 6vw, 88px) var(--cc-pad); background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%); }
+.cc-hero { position: relative; overflow: hidden; display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: var(--space-8); padding: clamp(40px, 6vw, 88px) var(--cc-pad); background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg) 100%); perspective: 1200px; }
+/* Ambient brand glow behind the device (never under the copy/text). */
+.cc-hero::before { content: ""; position: absolute; inset: 0; background: var(--gradient-ambient); pointer-events: none; z-index: 0; }
+.cc-hero > * { position: relative; z-index: 1; }
 .cc-hero-copy { display: flex; flex-direction: column; gap: 24px; align-items: flex-start; }
 .cc-kicker { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: var(--color-accent); }
 .cc-hero h1 { font-size: clamp(40px, 6vw, 72px); line-height: 1.03; font-weight: 800; letter-spacing: -0.035em; margin: 0; }
 .cc-hero .cc-lead { font-size: 17px; line-height: 1.6; max-width: 46ch; color: var(--color-text-muted); margin: 0; }
 .cc-hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
-.cc-hero-img { min-height: 420px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+.cc-hero-img { min-height: 420px; border-radius: var(--radius-lg); box-shadow: var(--depth-2); transform-style: preserve-3d; transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease); will-change: transform; }
+.cc-hero-img:hover { box-shadow: var(--depth-3); }
+/* Pointer-tilt applied by JS via CSS custom props; no tilt under reduced-motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .cc-hero-img.cc-tilt { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+}
 
 .cc-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: clamp(40px, 5vw, 64px) var(--cc-pad) 20px; }
 .cc-section-head h2 { font-size: clamp(26px, 3.4vw, 34px); font-weight: 800; letter-spacing: -0.02em; margin: 0; }

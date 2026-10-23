@@ -192,4 +192,30 @@
 			});
 		}
 	})();
+
+	/* Frosted nav: strengthen the glass once the page is scrolled. */
+	var ccHeader = document.querySelector('.cc-site-header');
+	if (ccHeader) {
+		var ccNavScroll = function () { ccHeader.classList.toggle('is-scrolled', window.pageYOffset > 10); };
+		window.addEventListener('scroll', ccNavScroll, { passive: true });
+		ccNavScroll();
+	}
+
+	/* Hero device pointer-tilt — desktop pointers only, never under reduced motion. */
+	var ccHeroImg = document.querySelector('.cc-hero .cc-hero-img');
+	if (ccHeroImg && !reduceMotion && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+		var ccHero = ccHeroImg.closest('.cc-hero');
+		var CC_TILT_MAX = 6; // degrees
+		var ccTilt = function (e) {
+			var r = ccHeroImg.getBoundingClientRect();
+			var px = (e.clientX - r.left) / r.width - 0.5;
+			var py = (e.clientY - r.top) / r.height - 0.5;
+			ccHeroImg.style.setProperty('--ry', (px * CC_TILT_MAX).toFixed(2) + 'deg');
+			ccHeroImg.style.setProperty('--rx', (-py * CC_TILT_MAX).toFixed(2) + 'deg');
+		};
+		var ccTiltReset = function () { ccHeroImg.style.setProperty('--rx', '0deg'); ccHeroImg.style.setProperty('--ry', '0deg'); };
+		ccHeroImg.classList.add('cc-tilt');
+		(ccHero || ccHeroImg).addEventListener('pointermove', ccTilt);
+		(ccHero || ccHeroImg).addEventListener('pointerleave', ccTiltReset);
+	}
 })();

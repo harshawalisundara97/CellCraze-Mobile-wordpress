@@ -90,8 +90,25 @@
 
   /* Motion. */
   --ease: cubic-bezier(.4, 0, .2, 1);
+  --ease-spring: cubic-bezier(.22, 1, .36, 1);
   --dur-fast: .14s;
   --dur: .22s;
+  --dur-slow: .5s;
+
+  /* ── Liquid Glass Tech Showroom (additive) ──────────────────────────────── */
+  /* Stronger frosted glass for the nav on scroll + dark-surface glass tint. */
+  --glass-bg-strong: rgba(255,255,255,.82);
+  --glass-tint-dark: rgba(27,25,23,.55);
+  --blur-sm: 10px;
+  --blur-lg: 24px;
+
+  /* Layered depth for floating product / device cards. */
+  --depth-1: 0 2px 8px rgba(16,24,40,.06);
+  --depth-2: 0 12px 32px rgba(16,24,40,.12);
+  --depth-3: 0 30px 70px rgba(16,24,40,.22);
+
+  /* Ambient brand glow behind hero devices (very low alpha — never behind text). */
+  --gradient-ambient: radial-gradient(60% 60% at 50% 42%, rgba(227,48,26,.14) 0%, rgba(242,106,33,.10) 42%, rgba(255,255,255,0) 72%);
 }
 
 body {
