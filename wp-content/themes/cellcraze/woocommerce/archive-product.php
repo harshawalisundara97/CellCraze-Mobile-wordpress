@@ -48,6 +48,8 @@ get_header( 'shop' );
 								'title_li'   => '',
 								'hide_empty' => false,
 								'depth'      => 2,
+								// UI-005: keep "Uncategorized" out of the storefront sidebar.
+								'exclude'    => array_filter( array( (int) get_option( 'default_product_cat' ) ) ),
 							)
 						);
 						?>

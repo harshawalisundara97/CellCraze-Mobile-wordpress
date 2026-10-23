@@ -14,6 +14,9 @@ $cart_count = ( function_exists( 'WC' ) && WC()->cart ) ? WC()->cart->get_cart_c
 $cart_url   = function_exists( 'wc_get_cart_url' ) ? wc_get_cart_url() : home_url( '/cart/' );
 $account_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/my-account/' );
 $shop_url   = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'shop' ) : home_url( '/shop/' );
+// Track-order: use a dedicated order-tracking page when one exists, else My Account (FLOW-002).
+$cc_track_page = get_page_by_path( 'order-tracking' );
+$cc_track_url  = $cc_track_page ? get_permalink( $cc_track_page ) : $account_url;
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>
@@ -43,7 +46,7 @@ if ( function_exists( 'cellcraze_opt' ) && cellcraze_opt( 'cc_announce_on' ) && 
 			<span>Free delivery over Rs 10,000</span>
 			<span>Cash on delivery available</span>
 			<span>Official warranty on every device</span>
-			<a class="cc-util-right" href="<?php echo esc_url( $account_url ); ?>">Track your order</a>
+			<a class="cc-util-right" href="<?php echo esc_url( $cc_track_url ); ?>">Track your order</a>
 		</div>
 	</div>
 
@@ -91,8 +94,17 @@ if ( function_exists( 'cellcraze_opt' ) && cellcraze_opt( 'cc_announce_on' ) && 
 				)
 			);
 		} else {
-			// Fallback: top-level product categories.
-			$cats = get_terms( array( 'taxonomy' => 'product_cat', 'parent' => 0, 'hide_empty' => false, 'number' => 7 ) );
+			// Fallback: all top-level product categories, excluding "Uncategorized"
+			// (UX-001: show Power Banks/Smartwatches; UI-005: hide the default cat).
+			$cats = get_terms(
+				array(
+					'taxonomy'   => 'product_cat',
+					'parent'     => 0,
+					'hide_empty' => false,
+					'number'     => 0,
+					'exclude'    => array_filter( array( (int) get_option( 'default_product_cat' ) ) ),
+				)
+			);
 			if ( ! is_wp_error( $cats ) ) {
 				foreach ( $cats as $cat ) {
 					printf( '<a href="%s">%s</a>', esc_url( get_term_link( $cat ) ), esc_html( $cat->name ) );

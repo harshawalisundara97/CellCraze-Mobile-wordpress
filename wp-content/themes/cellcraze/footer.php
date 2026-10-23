@@ -21,7 +21,7 @@ $cc_footer_cats = function_exists( 'get_terms' ) ? get_terms( array(
 	'taxonomy'   => 'product_cat',
 	'parent'     => 0,
 	'hide_empty' => true,
-	'number'     => 6,
+	'number'     => 12, // UX-002: show all top-level categories incl. Phones (was 6, which cut Phones).
 	'exclude'    => array( get_option( 'default_product_cat' ) ),
 ) ) : array();
 
@@ -39,19 +39,33 @@ if ( defined( 'TINVWL_URL' ) && class_exists( 'TInvWL_Public_Wishlist_View' ) ) 
 	$cc_account_links[] = array( __( 'Wishlist', 'cellcraze' ), $cc_wishlist );
 }
 
-/** Help links — all resolvable (shop views + a working contact mailto). */
-$cc_help_links = array(
-	array( __( 'All products', 'cellcraze' ), $cc_shop ),
-);
-if ( function_exists( 'cellcraze_deals_url' ) ) {
-	$cc_help_links[] = array( __( 'Deals &amp; offers', 'cellcraze' ), cellcraze_deals_url() );
+/**
+ * Help links — genuine support links only (UI-007: no "All products" here).
+ * Contact prefers a real Contact page when one exists, else a working mailto.
+ * Policy/FAQ links appear only when the matching page actually exists — we never
+ * link to a page that would 404.
+ */
+$cc_help_links   = array();
+$cc_contact_page = get_page_by_path( 'contact-us' );
+$cc_help_links[] = $cc_contact_page
+	? array( __( 'Contact us', 'cellcraze' ), get_permalink( $cc_contact_page ) )
+	: array( __( 'Contact us', 'cellcraze' ), 'mailto:' . antispambot( get_option( 'admin_email' ) ) );
+
+foreach ( array(
+	'shipping-policy' => __( 'Shipping', 'cellcraze' ),
+	'returns-policy'  => __( 'Returns & refunds', 'cellcraze' ),
+	'faq'             => __( 'FAQ', 'cellcraze' ),
+) as $cc_slug => $cc_label ) {
+	$cc_pg = get_page_by_path( $cc_slug );
+	if ( $cc_pg ) {
+		$cc_help_links[] = array( $cc_label, get_permalink( $cc_pg ) );
+	}
 }
-// Privacy page link only when it is set AND published (empty string otherwise).
+// Privacy page link only when it is set AND published.
 $cc_privacy = function_exists( 'get_privacy_policy_url' ) ? get_privacy_policy_url() : '';
 if ( $cc_privacy ) {
 	$cc_help_links[] = array( __( 'Privacy Policy', 'cellcraze' ), $cc_privacy );
 }
-$cc_help_links[] = array( __( 'Contact us', 'cellcraze' ), 'mailto:' . antispambot( get_option( 'admin_email' ) ) );
 ?>
 </main><!-- .cc-main -->
 
