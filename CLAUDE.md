@@ -75,8 +75,25 @@ a full pivot to a white, premium, Apple-store-calm + modern-SaaS look.)_
   muted grey secondary (`#6e6e73`); hairline grey borders (`#e6e8eb`).
 - Soft radii (`--radius-sm 8 / --radius-md 12 / --radius-lg 18`, pill for chips);
   subtle, cool, low-contrast shadows; real colour product photography (no grayscale).
-- One restrained accent — **premium blue `#0071e3`** — for primary actions & key status,
-  plus semantic success/warning/danger. Generous whitespace, clear hierarchy.
+- One restrained accent — **CellCraze brand RED `#e3301a`** (hover `#d12a14`, pressed / small
+  red text `#b01f08`), with **brand ORANGE `#f26a21`** as the secondary accent — for primary
+  actions, badges & key status, plus semantic success/warning/danger. Generous whitespace, clear
+  hierarchy. _(Accent switched from blue to the logo's red+orange on 2026-10-23 by owner decision;
+  surfaces stay White/Premium.)_
+
+**Brand palette (from the CellCraze logo — `assets/img/cellcraze-logo.jpg`):**
+| Role | Token | Hex |
+|---|---|---|
+| Primary accent (red / "CRAZE") | `--color-accent` | `#e3301a` |
+| Accent hover / pressed / small-text | `--color-accent-600/700` | `#d12a14` / `#b01f08` |
+| Secondary accent (orange / phone screen) | `--color-accent-2` | `#f26a21` |
+| Brand dark (logo bg, dark sections, footer lockup) | `--color-brand-dark` | `#1b1917` |
+| Brand cream (logo "CELL") | `--color-brand-cream` | `#e9e2d4` |
+| Surfaces (unchanged) | `--color-bg` / `--color-surface` | `#ffffff` / `#f6f7f9` |
+| Ink / muted | `--color-text` / `--color-text-muted` | `#1d1d1f` / `#6e6e73` |
+Full 100–900 red + orange ramps live in `assets/css/tokens.css` (source of truth). The logo is
+wired into the theme header/footer (`.cc-logo-img`); also set it in Appearance → Customize on the
+live site.
 - Selective glassmorphism (translucent white + blur + fine border) is allowed on the
   storefront too now — sticky header, overlays — but never at the cost of readability,
   and never on every card. Provide an opaque `@supports` fallback.
@@ -112,8 +129,9 @@ delivery / reports screens **we control**. Backend-only tasks must leave the UI 
 1. The **"White / Premium" design system** (`assets/css/tokens.css` = source of truth,
    `assets/css/cellcraze.css` = storefront screens, `cellcraze-core/assets/css/cc-admin.css`
    = admin) governs **all** surfaces — customer storefront *and* admin/POS/dashboard. Its rules:
-   **white/off-white surfaces, charcoal ink, one blue accent `#0071e3` + semantic statuses,
-   soft radii, hairline borders, subtle shadows, real colour photography, Archivo.** Rounded
+   **white/off-white surfaces, charcoal ink, brand RED accent `#e3301a` + ORANGE secondary
+   `#f26a21` + semantic statuses, soft radii, hairline borders, subtle shadows, real colour
+   photography, Archivo.** (Brand palette table above is the authority.) Rounded
    corners and *selective* glassmorphism are now allowed on the storefront too (header/overlays),
    with opaque fallbacks and never at the cost of readability.
 2. The standards below set the **universal quality bar** (hierarchy, spacing, accessibility,

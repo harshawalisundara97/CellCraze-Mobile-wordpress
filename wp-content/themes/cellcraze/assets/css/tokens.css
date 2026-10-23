@@ -12,37 +12,42 @@
   --color-text: #1d1d1f;        /* charcoal ink */
   --color-text-muted: #6e6e73;  /* muted secondary text */
 
-  /* One restrained accent (premium blue) + semantic statuses. */
-  --color-accent: #0071e3;
-  --color-accent-2: #34a0ff;
+  /* Brand accent = CellCraze logo RED; secondary = logo ORANGE. + semantic statuses. */
+  --color-accent: #e3301a;    /* CRAZE red */
+  --color-accent-2: #f26a21;  /* phone-screen orange */
   --color-success: #1a8a52;
   --color-warning: #b26a00;
-  --color-danger: #d7342b;
+  --color-danger: #c62828;    /* distinct from brand red for error states */
+
+  /* Brand lockup colours (from the logo) — for dark sections / logo tile / footer. */
+  --color-brand-dark: #1b1917;  /* logo background charcoal */
+  --color-brand-cream: #e9e2d4; /* logo "CELL" cream */
 
   --color-divider: #e6e8eb;        /* hairline borders */
   --color-divider-strong: #d3d6db; /* stronger separators */
 
-  /* Accent ramp (blue), one shared lightness scale. */
-  --color-accent-100: #eaf4ff;
-  --color-accent-200: #cfe6ff;
-  --color-accent-300: #a4d0ff;
-  --color-accent-400: #5fb0ff;
-  --color-accent-500: #1e8bff;
-  --color-accent-600: #0071e3;
-  --color-accent-700: #005bb8;
-  --color-accent-800: #00458c;
-  --color-accent-900: #002f60;
+  /* Accent ramp (brand RED), one shared lightness scale.
+     700+ are dark enough for small text on white (>=4.5:1). */
+  --color-accent-100: #fdece8;
+  --color-accent-200: #fbd4cc;
+  --color-accent-300: #f6ab9b;
+  --color-accent-400: #ef7a63;
+  --color-accent-500: #e8492f;
+  --color-accent-600: #d12a14;
+  --color-accent-700: #b01f08;
+  --color-accent-800: #871705;
+  --color-accent-900: #581004;
 
-  /* Secondary accent ramp. */
-  --color-accent-2-100: #eef6ff;
-  --color-accent-2-200: #d6ebff;
-  --color-accent-2-300: #add6ff;
-  --color-accent-2-400: #74baff;
-  --color-accent-2-500: #4aa3ff;
-  --color-accent-2-600: #2b86e6;
-  --color-accent-2-700: #1f66b4;
-  --color-accent-2-800: #184e88;
-  --color-accent-2-900: #12375f;
+  /* Secondary accent ramp (brand ORANGE). */
+  --color-accent-2-100: #fff2e8;
+  --color-accent-2-200: #ffddc2;
+  --color-accent-2-300: #ffc19a;
+  --color-accent-2-400: #ff9c5e;
+  --color-accent-2-500: #fb7f2e;
+  --color-accent-2-600: #ec6a17;
+  --color-accent-2-700: #c1530f;
+  --color-accent-2-800: #933f0c;
+  --color-accent-2-900: #5e2908;
 
   /* Neutral ramp — cool greys on white. */
   --color-neutral-100: #f6f7f9;
@@ -149,7 +154,7 @@ figcaption { font-size: 11px; margin-top: var(--space-1); color: var(--color-tex
 .btn svg { display: block; }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 1px 2px rgba(0,113,227,.25); }
+.btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 1px 2px rgba(227,48,26,.25); }
 .btn-primary:hover { background: var(--color-accent-700); color: #fff; box-shadow: var(--shadow-md); }
 .btn-primary:active { background: var(--color-accent-800); }
 .btn-secondary { border-color: var(--color-divider-strong); background: var(--color-bg); }

@@ -58,7 +58,7 @@ $cc_help_links[] = array( __( 'Contact us', 'cellcraze' ), 'mailto:' . antispamb
 <footer class="cc-site-footer">
 	<div class="cc-footer">
 		<div>
-			<a class="cc-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="cc-mark"></span><?php echo esc_html( $cc_name ); ?></a>
+			<a class="cc-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>"><img class="cc-logo-img" src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/img/cellcraze-logo.jpg' ); ?>" alt="<?php echo esc_attr( $cc_name ); ?>" width="56" height="56" /></a>
 			<p class="cc-muted" style="margin-top:12px;max-width:40ch;">Genuine phones and accessories, backed by official warranty. Pay by cash on delivery or bank transfer.</p>
 		</div>
 

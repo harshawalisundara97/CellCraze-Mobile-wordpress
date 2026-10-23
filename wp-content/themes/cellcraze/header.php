@@ -50,7 +50,7 @@ if ( function_exists( 'cellcraze_opt' ) && cellcraze_opt( 'cc_announce_on' ) && 
 	<!-- Main bar (desktop) -->
 	<div class="cc-mainbar">
 		<a class="cc-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>">
-			<span class="cc-mark"></span><?php echo esc_html( get_bloginfo( 'name' ) ?: 'CellCraze' ); ?>
+			<img class="cc-logo-img" src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/img/cellcraze-logo.jpg' ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ?: 'CellCraze' ); ?>" width="48" height="48" />
 		</a>
 
 		<form role="search" method="get" class="cc-search" action="<?php echo esc_url( home_url( '/' ) ); ?>">
@@ -109,7 +109,7 @@ if ( function_exists( 'cellcraze_opt' ) && cellcraze_opt( 'cc_announce_on' ) && 
 			<a class="btn btn-icon btn-secondary" href="<?php echo esc_url( $shop_url ); ?>" aria-label="Menu">
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
 			</a>
-			<a class="cc-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>"><span class="cc-mark"></span><?php echo esc_html( get_bloginfo( 'name' ) ?: 'CellCraze' ); ?></a>
+			<a class="cc-logo" href="<?php echo esc_url( home_url( '/' ) ); ?>"><img class="cc-logo-img" src="<?php echo esc_url( get_stylesheet_directory_uri() . '/assets/img/cellcraze-logo.jpg' ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ?: 'CellCraze' ); ?>" width="40" height="40" /></a>
 			<a class="btn btn-icon btn-primary cc-cart-btn" href="<?php echo esc_url( $cart_url ); ?>" aria-label="Cart">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
 				<span class="cc-cart-count cc-cart-count--badge"><?php echo esc_html( $cart_count ); ?></span>
