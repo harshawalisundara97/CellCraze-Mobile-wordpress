@@ -125,7 +125,18 @@ class Cellcraze_IMEI_Admin {
 					</div>
 					<div>
 						<label><?php esc_html_e( 'Supplier', 'cellcraze-core' ); ?></label>
-						<input type="text" name="supplier" />
+						<?php $cc_suppliers = class_exists( 'Cellcraze_Suppliers' ) ? Cellcraze_Suppliers::active() : array(); ?>
+						<?php if ( ! empty( $cc_suppliers ) ) : ?>
+							<select name="supplier">
+								<option value=""><?php esc_html_e( '— none —', 'cellcraze-core' ); ?></option>
+								<?php foreach ( $cc_suppliers as $cc_sup ) : ?>
+									<option value="<?php echo esc_attr( $cc_sup->name ); ?>"><?php echo esc_html( $cc_sup->name ); ?></option>
+								<?php endforeach; ?>
+							</select>
+						<?php else : ?>
+							<input type="text" name="supplier" />
+							<span class="description"><?php printf( wp_kses_post( __( 'Tip: add suppliers on the <a href="%s">Suppliers</a> screen to pick from a list.', 'cellcraze-core' ) ), esc_url( admin_url( 'admin.php?page=cellcraze-suppliers' ) ) ); ?></span>
+						<?php endif; ?>
 					</div>
 					<div class="full">
 						<button type="submit" class="button button-primary"><?php esc_html_e( 'Add unit', 'cellcraze-core' ); ?></button>
