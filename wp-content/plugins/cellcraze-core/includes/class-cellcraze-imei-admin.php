@@ -166,10 +166,21 @@ class Cellcraze_IMEI_Admin {
 	}
 
 	/**
+	 * Current user may manage IMEI units: the custom IMEI staff capability
+	 * (cashier / warehouse / order-processing) OR full WooCommerce management.
+	 * Mirrors the REST layer's permission check so every IMEI surface agrees (P0-3).
+	 *
+	 * @return bool
+	 */
+	private static function can_manage() {
+		return current_user_can( 'cellcraze_manage_imei' ) || current_user_can( 'manage_woocommerce' );
+	}
+
+	/**
 	 * Handle the add-unit form (supports bulk paste).
 	 */
 	public function handle_add_imei() {
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		if ( ! self::can_manage() ) {
 			wp_die( esc_html__( 'Permission denied.', 'cellcraze-core' ) );
 		}
 		check_admin_referer( 'cellcraze_add_imei', 'cellcraze_imei_nonce' );
@@ -270,7 +281,7 @@ class Cellcraze_IMEI_Admin {
 	 * Handle unit deletion.
 	 */
 	public function handle_delete_imei() {
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+		if ( ! self::can_manage() ) {
 			wp_die( esc_html__( 'Permission denied.', 'cellcraze-core' ) );
 		}
 		$id         = isset( $_GET['id'] ) ? absint( $_GET['id'] ) : 0;
@@ -332,7 +343,7 @@ class Cellcraze_IMEI_Admin {
 			'woocommerce',
 			__( 'IMEI / Serial Registry', 'cellcraze-core' ),
 			__( 'IMEI Registry', 'cellcraze-core' ),
-			'manage_woocommerce',
+			'cellcraze_manage_imei',
 			'cellcraze-imei',
 			array( $this, 'registry_page' )
 		);
@@ -342,6 +353,9 @@ class Cellcraze_IMEI_Admin {
 	 * Render the global registry: search + recent units.
 	 */
 	public function registry_page() {
+		if ( ! self::can_manage() ) {
+			wp_die( esc_html__( 'Permission denied.', 'cellcraze-core' ), '', array( 'response' => 403 ) );
+		}
 		global $wpdb;
 		$table    = Cellcraze_IMEI_DB::table();
 		$statuses = Cellcraze_IMEI_DB::statuses();
