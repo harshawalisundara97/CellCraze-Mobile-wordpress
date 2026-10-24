@@ -177,6 +177,33 @@ class Cellcraze_IMEI_Admin {
 	}
 
 	/**
+	 * Human-readable product label for a registry row. Resolves a variation to
+	 * its parent title, labels units whose product was removed, and marks
+	 * unassigned (product_id = 0) rows explicitly, so the registry never shows a
+	 * bare blank that looks like a mismatch with the product tab (P0-1).
+	 *
+	 * @param object $row IMEI row.
+	 * @return string Pre-escaped HTML.
+	 */
+	private static function product_label( $row ) {
+		$pid = isset( $row->product_id ) ? (int) $row->product_id : 0;
+		if ( ! $pid ) {
+			return '<span class="cc-muted">&mdash; ' . esc_html__( 'unassigned', 'cellcraze-core' ) . '</span>';
+		}
+		$post = get_post( $pid );
+		if ( ! $post ) {
+			/* translators: %d: product id */
+			return '<span class="cc-muted">' . esc_html( sprintf( __( 'Product #%d (removed)', 'cellcraze-core' ), $pid ) ) . '</span>';
+		}
+		if ( 'product_variation' === $post->post_type && $post->post_parent ) {
+			$parent_title = get_the_title( $post->post_parent );
+			$title        = $parent_title ? $parent_title : get_the_title( $pid );
+			return esc_html( $title ) . ' <span class="cc-muted">(' . esc_html__( 'variation', 'cellcraze-core' ) . ')</span>';
+		}
+		return esc_html( get_the_title( $pid ) );
+	}
+
+	/**
 	 * Handle the add-unit form (supports bulk paste).
 	 */
 	public function handle_add_imei() {
@@ -361,12 +388,21 @@ class Cellcraze_IMEI_Admin {
 		$statuses = Cellcraze_IMEI_DB::statuses();
 		$search   = isset( $_GET['s'] ) ? sanitize_text_field( wp_unslash( $_GET['s'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
+		// Paginated so the registry never silently truncates (was LIMIT 200),
+		// which made its counts disagree with the per-product tab (P0-1).
+		$per_page = 50;
+		$paged    = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification
+		$offset   = ( $paged - 1 ) * $per_page;
+
 		if ( '' !== $search ) {
-			$like = '%' . $wpdb->esc_like( $search ) . '%';
-			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE imei LIKE %s ORDER BY id DESC LIMIT 200", $like ) ); // phpcs:ignore WordPress.DB
+			$like  = '%' . $wpdb->esc_like( $search ) . '%';
+			$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE imei LIKE %s", $like ) ); // phpcs:ignore WordPress.DB
+			$rows  = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE imei LIKE %s ORDER BY id DESC LIMIT %d OFFSET %d", $like, $per_page, $offset ) ); // phpcs:ignore WordPress.DB
 		} else {
-			$rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY id DESC LIMIT 200" ); // phpcs:ignore WordPress.DB
+			$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" ); // phpcs:ignore WordPress.DB
+			$rows  = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} ORDER BY id DESC LIMIT %d OFFSET %d", $per_page, $offset ) ); // phpcs:ignore WordPress.DB
 		}
+		$total_pages = max( 1, (int) ceil( $total / $per_page ) );
 		?>
 		<div class="wrap cc-admin">
 			<div class="cc-head"><div><h1><?php esc_html_e( 'IMEI / Serial Registry', 'cellcraze-core' ); ?></h1><p class="cc-sub"><?php esc_html_e( 'Every physical unit, its status, order and supplier.', 'cellcraze-core' ); ?></p></div></div>
@@ -377,6 +413,12 @@ class Cellcraze_IMEI_Admin {
 					<button class="button"><?php esc_html_e( 'Search', 'cellcraze-core' ); ?></button>
 				</p>
 			</form>
+			<p class="cc-muted">
+				<?php
+				/* translators: 1: total units, 2: current page, 3: total pages */
+				printf( esc_html__( '%1$d unit(s) total — page %2$d of %3$d.', 'cellcraze-core' ), (int) $total, (int) $paged, (int) $total_pages );
+				?>
+			</p>
 			<table class="widefat striped">
 				<thead>
 					<tr>
@@ -395,12 +437,7 @@ class Cellcraze_IMEI_Admin {
 						<?php foreach ( $rows as $row ) : ?>
 							<tr>
 								<td><code><?php echo esc_html( $row->imei ); ?></code></td>
-								<td>
-									<?php
-									$name = $row->product_id ? get_the_title( $row->product_id ) : '';
-									echo $name ? esc_html( $name ) : '&mdash;';
-									?>
-								</td>
+								<td><?php echo self::product_label( $row ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in helper. ?></td>
 								<td><?php echo self::status_chip( $row->status ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in helper. ?></td>
 								<td>
 									<?php if ( $row->order_id ) : ?>
@@ -414,6 +451,19 @@ class Cellcraze_IMEI_Admin {
 					<?php endif; ?>
 				</tbody>
 			</table>
+			<?php if ( $total_pages > 1 ) : ?>
+				<?php
+				$base = add_query_arg( array( 'page' => 'cellcraze-imei', 's' => $search ), admin_url( 'admin.php' ) );
+				?>
+				<p class="cc-pager">
+					<?php if ( $paged > 1 ) : ?>
+						<a class="button" href="<?php echo esc_url( add_query_arg( 'paged', $paged - 1, $base ) ); ?>">&laquo; <?php esc_html_e( 'Prev', 'cellcraze-core' ); ?></a>
+					<?php endif; ?>
+					<?php if ( $paged < $total_pages ) : ?>
+						<a class="button" href="<?php echo esc_url( add_query_arg( 'paged', $paged + 1, $base ) ); ?>"><?php esc_html_e( 'Next', 'cellcraze-core' ); ?> &raquo;</a>
+					<?php endif; ?>
+				</p>
+			<?php endif; ?>
 		</div>
 		<?php
 	}
